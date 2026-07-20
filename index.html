@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+  Biochar Soil Suitability Atlas - National overview (Mode 1)
+  American Biochar Institute
+
+  Static Leaflet viewer for the precomputed national tile pyramid. The build
+  workflow publishes this file plus a tiles/ folder to GitHub Pages. Embed the
+  published page in WordPress with an iframe (see WORDPRESS_EMBED.md).
+
+  TILE_URL is relative, so the viewer and its tiles/ folder travel together.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Soil Response to Biochar - National Map | American Biochar Institute</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  :root{
+    --ink:#211f1c; --paper:#f6f3ec; --line:#d8d2c4; --moss:#5b6e4f;
+    --moss-d:#4f6043; --muted:#6f6a61;
+    /* class palette - matches biochar_class_colors.txt exactly */
+    --c-neg:#bdbdbd; --c-low:#fdd0a2; --c-fair:#fee889; --c-good:#a1d99b; --c-exc:#238443;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink)}
+  #app{display:flex;flex-direction:column;height:100%}
+  header{background:var(--ink);color:var(--paper);padding:12px 18px 11px;border-bottom:3px solid var(--moss)}
+  header .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b9c4ab;margin:0 0 3px}
+  header h1{margin:0;font-family:Georgia,"Iowan Old Style",serif;font-size:19px;font-weight:600}
+  header p{margin:2px 0 0;font-size:12px;color:#cfd6c6}
+  #map{flex:1 1 auto;min-height:320px;background:var(--paper)}
+
+  .panel{position:absolute;z-index:1000;background:rgba(246,243,236,.97);border:1px solid var(--line);
+    border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.18);font-size:12.5px;line-height:1.5;color:var(--ink)}
+  #legend{bottom:22px;right:12px;padding:10px 12px;max-width:250px}
+  #legend .lt{font-weight:700;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  #legend .row{display:flex;align-items:center;margin:3px 0}
+  #legend .sw{width:15px;height:15px;margin-right:8px;border:1px solid rgba(0,0,0,.2);border-radius:2px;flex:0 0 auto}
+  #legend .note{margin-top:9px;color:var(--muted);font-size:11px;line-height:1.45}
+  #about{top:12px;left:12px;padding:9px 12px;max-width:270px}
+  #about .lt{font-weight:700;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--moss-d);margin-bottom:4px}
+  #about p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.5}
+  #about a{color:var(--moss-d)}
+  @media (max-width:640px){
+    #about{max-width:210px}
+    #legend{max-width:190px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <p class="eyebrow">American Biochar Institute</p>
+    <h1>Soil Response to Biochar: national overview</h1>
+    <p>USDA-NRCS published rating, read as native soil condition</p>
+  </header>
+  <div id="map"></div>
+</div>
+
+<div id="about" class="panel">
+  <div class="lt">About this map</div>
+  <p>Each color is the USDA-NRCS interpretation <i>SOH - Dynamic Soil Properties
+  Response to Biochar</i>, which estimates how much biochar is expected to improve
+  a soil's dynamic properties. Higher means more expected gain. Draw-an-area detail
+  is handled by the Institute's separate area tool.</p>
+</div>
+
+<div id="legend" class="panel">
+  <div class="lt">Expected response to biochar</div>
+  <div class="row"><span class="sw" style="background:var(--c-exc)"></span>Excellent (0.751 - 1.0)</div>
+  <div class="row"><span class="sw" style="background:var(--c-good)"></span>Good (0.501 - 0.750)</div>
+  <div class="row"><span class="sw" style="background:var(--c-fair)"></span>Fair (0.251 - 0.500)</div>
+  <div class="row"><span class="sw" style="background:var(--c-low)"></span>Low (0.001 - 0.250)</div>
+  <div class="row"><span class="sw" style="background:var(--c-neg)"></span>Negligible (0)</div>
+  <div class="note">The rating describes the soil as mapped, in its native condition,
+  not a drained or managed field. Areas with no SSURGO rating are left unshaded.</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ---- tile pyramid produced by the build workflow (XYZ scheme) ----
+  var TILE_URL = "tiles/{z}/{x}/{y}.png";
+  var TMS = false;              // build uses gdal2tiles --xyz, so XYZ (not TMS)
+  var NATIVE_MAX_ZOOM = 9;      // top zoom actually built; keep in sync with the workflow "zoom" input
+
+  var map = L.map("map", { center: [39.5, -98.35], zoom: 4, minZoom: 3 });
+
+  // light basemap under the interpretation
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; OpenStreetMap, &copy; CARTO',
+    subdomains: "abcd", maxZoom: 19
+  }).addTo(map);
+
+  // the biochar rating layer; overzooms past the built levels instead of vanishing
+  L.tileLayer(TILE_URL, {
+    tms: TMS, opacity: 0.82, maxNativeZoom: NATIVE_MAX_ZOOM, maxZoom: 12,
+    attribution: 'Rating: USDA-NRCS SSURGO, SOH - Dynamic Soil Properties Response to Biochar; mukey grid: UC Davis SoilWeb'
+  }).addTo(map);
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Color table for the biochar class raster (biochar_national_class.tif)
+# Use with: gdaldem color-relief <class.tif> biochar_class_colors.txt <out.tif> -alpha -nearest_color_entry
+# Columns: value  R  G  B  A
+# Class codes: 1 Negligible, 2 Low, 3 Fair, 4 Good, 5 Excellent, 0 nodata
+0   0   0   0   0
+1   189 189 189 255
+2   253 208 162 255
+3   254 232 137 255
+4   161 217 155 255
+5   35  132 67  255
+nv  0   0   0   0

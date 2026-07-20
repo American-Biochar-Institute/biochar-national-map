@@ -1,0 +1,76 @@
+name: Build and deploy biochar national map
+
+# Builds the Mode 1 national tile map in GitHub's cloud and publishes it to
+# GitHub Pages. Nothing runs on anyone's machine.
+#
+#   - Manual run:  Actions tab -> "Build and deploy biochar national map" -> Run workflow
+#   - Yearly run:  mid-November, after the Oct 1 SSURGO refresh reaches the SoilWeb WCS
+#
+# One-time setup: Settings -> Pages -> Build and deployment -> Source = "GitHub Actions".
+
+on:
+  workflow_dispatch:
+    inputs:
+      resolution:
+        description: "Grid resolution in meters (300 = detailed browse, 1000 = fast test)"
+        required: true
+        default: "300"
+      zoom:
+        description: "Tile zoom range"
+        required: true
+        default: "3-9"
+  schedule:
+    # 06:00 UTC, November 15 each year (SSURGO refreshes Oct 1; WCS syncs by early Nov)
+    - cron: "0 6 15 11 *"
+
+# Least-privilege permissions for the Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let one deploy finish before the next starts
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install GDAL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin python3-gdal python3-numpy
+          gdalinfo --version
+
+      - name: Build national tiles
+        run: |
+          python3 build/build_biochar_tiles.py \
+            --lookup data/biochar_national_lookup.csv \
+            --colors build/biochar_class_colors.txt \
+            --out site \
+            --res "${{ github.event.inputs.resolution || '300' }}" \
+            --zoom "${{ github.event.inputs.zoom || '3-9' }}"
+
+      - name: Add the viewer to the site root
+        run: cp viewer/index.html site/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
