@@ -1,13 +1,5 @@
 name: Build and deploy biochar national map
 
-# Builds the Mode 1 national tile map in GitHub's cloud and publishes it to
-# GitHub Pages. Nothing runs on anyone's machine.
-#
-#   - Manual run:  Actions tab -> "Build and deploy biochar national map" -> Run workflow
-#   - Yearly run:  mid-November, after the Oct 1 SSURGO refresh reaches the SoilWeb WCS
-#
-# One-time setup: Settings -> Pages -> Build and deployment -> Source = "GitHub Actions".
-
 on:
   workflow_dispatch:
     inputs:
@@ -20,16 +12,13 @@ on:
         required: true
         default: "3-9"
   schedule:
-    # 06:00 UTC, November 15 each year (SSURGO refreshes Oct 1; WCS syncs by early Nov)
     - cron: "0 6 15 11 *"
 
-# Least-privilege permissions for the Pages deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Let one deploy finish before the next starts
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -49,15 +38,15 @@ jobs:
 
       - name: Build national tiles
         run: |
-          python3 build/build_biochar_tiles.py \
-            --lookup data/biochar_national_lookup.csv \
-            --colors build/biochar_class_colors.txt \
+          python3 build_biochar_tiles.py \
+            --lookup biochar_national_lookup.csv \
+            --colors biochar_class_colors.txt \
             --out site \
             --res "${{ github.event.inputs.resolution || '300' }}" \
             --zoom "${{ github.event.inputs.zoom || '3-9' }}"
 
       - name: Add the viewer to the site root
-        run: cp viewer/index.html site/index.html
+        run: cp index.html site/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
