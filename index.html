@@ -7,7 +7,8 @@
   workflow publishes this file plus a tiles/ folder to GitHub Pages. Embed the
   published page in WordPress with an iframe (see WORDPRESS_EMBED.md).
 
-  TILE_URL is relative, so the viewer and its tiles/ folder travel together.
+  State outlines load at runtime from a CDN; the abbreviation labels are built in
+  so they always render. Both can be toggled with the layers control.
 -->
 <html lang="en">
 <head>
@@ -43,6 +44,15 @@
   #about .lt{font-weight:700;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--moss-d);margin-bottom:4px}
   #about p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.5}
   #about a{color:var(--moss-d)}
+
+  /* state abbreviation labels */
+  .state-label{background:none;border:none;text-align:center;white-space:nowrap;
+    font:700 11px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#2b2b2b;
+    text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff;pointer-events:none;}
+  /* small/crowded states: reveal only when zoomed in */
+  .state-label.small{display:none;}
+  #map.zoomed-in .state-label.small{display:block;}
+
   @media (max-width:640px){
     #about{max-width:210px}
     #legend{max-width:190px}
@@ -83,7 +93,7 @@
   // ---- tile pyramid produced by the build workflow (XYZ scheme) ----
   var TILE_URL = "tiles/{z}/{x}/{y}.png";
   var TMS = false;              // build uses gdal2tiles --xyz, so XYZ (not TMS)
-  var NATIVE_MAX_ZOOM = 9;      // top zoom actually built; keep in sync with the workflow "zoom" input
+  var NATIVE_MAX_ZOOM = 9;      // top zoom actually built
 
   var map = L.map("map", { center: [39.5, -98.35], zoom: 4, minZoom: 3 });
 
@@ -98,6 +108,54 @@
     tms: TMS, opacity: 0.82, maxNativeZoom: NATIVE_MAX_ZOOM, maxZoom: 12,
     attribution: 'Rating: USDA-NRCS SSURGO, SOH - Dynamic Soil Properties Response to Biochar; mukey grid: UC Davis SoilWeb'
   }).addTo(map);
+
+  // ---- state boundaries + abbreviation labels ----
+  var statesLayer = L.layerGroup().addTo(map);
+
+  // built-in label positions [lat, lon]; "small" marks crowded states shown only when zoomed in
+  var STATE_LABELS = {
+    AL:[32.7,-86.8], AZ:[34.3,-111.7], AR:[34.8,-92.4], CA:[37.2,-119.4], CO:[39.0,-105.6],
+    CT:[41.6,-72.7,1], DE:[39.0,-75.5,1], FL:[28.6,-81.6], GA:[32.7,-83.4], ID:[44.2,-114.5],
+    IL:[40.0,-89.2], IN:[39.9,-86.3], IA:[42.0,-93.5], KS:[38.5,-98.4], KY:[37.6,-85.3],
+    LA:[31.0,-92.0], ME:[45.4,-69.2], MD:[39.2,-76.8,1], MA:[42.3,-71.9,1], MI:[44.5,-85.5],
+    MN:[46.4,-94.3], MS:[32.7,-89.7], MO:[38.4,-92.5], MT:[47.0,-109.6], NE:[41.5,-99.8],
+    NV:[39.5,-116.9], NH:[43.8,-71.6,1], NJ:[40.2,-74.6,1], NM:[34.5,-106.1], NY:[42.9,-75.5],
+    NC:[35.5,-79.4], ND:[47.5,-100.3], OH:[40.3,-82.8], OK:[35.6,-97.5], OR:[43.9,-120.5],
+    PA:[40.9,-77.7], RI:[41.7,-71.5,1], SC:[33.9,-80.9], SD:[44.4,-100.3], TN:[35.8,-86.4],
+    TX:[31.3,-99.3], UT:[39.3,-111.7], VT:[44.0,-72.7,1], VA:[37.6,-78.7], WA:[47.4,-120.4],
+    WV:[38.6,-80.6], WI:[44.6,-89.9], WY:[43.0,-107.5], DC:[38.9,-77.03,1]
+  };
+  Object.keys(STATE_LABELS).forEach(function(ab){
+    var p = STATE_LABELS[ab];
+    L.marker([p[0], p[1]], {
+      interactive: false, keyboard: false,
+      icon: L.divIcon({ className: "state-label" + (p[2] ? " small" : ""), html: ab, iconSize: [22, 12] })
+    }).addTo(statesLayer);
+  });
+
+  // reveal crowded small-state labels only when zoomed in
+  function updateSmallLabels(){
+    var el = map.getContainer();
+    if (map.getZoom() >= 6) el.classList.add("zoomed-in"); else el.classList.remove("zoomed-in");
+  }
+  map.on("zoomend", updateSmallLabels); updateSmallLabels();
+
+  // state outlines from a stable CDN; if it fails, labels still show
+  fetch("https://cdn.jsdelivr.net/gh/PublicaMundi/MappingAPI@master/data/geojson/us-states.json")
+    .then(function(r){ return r.json(); })
+    .then(function(gj){
+      var skip = { Alaska:1, Hawaii:1, "Puerto Rico":1 };
+      var feats = gj.features.filter(function(f){ return !skip[f.properties.name]; });
+      L.geoJSON({ type:"FeatureCollection", features:feats }, {
+        interactive: false,
+        style: { color:"#3d3d3d", weight:0.8, opacity:0.55, fill:false }
+      }).addTo(statesLayer);
+    })
+    .catch(function(){ /* outlines optional; labels remain */ });
+
+  // toggle for the whole states overlay
+  L.control.layers(null, { "State boundaries &amp; labels": statesLayer },
+    { collapsed:false, position:"topright" }).addTo(map);
 </script>
 </body>
 </html>
