@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       zoom:
-        description: "Tile zoom range (100m data supports up to about z10)"
+        description: "Tile zoom range (50m data supports up to about z11)"
         required: true
-        default: "3-10"
+        default: "3-11"
 
 permissions:
   contents: read
@@ -32,16 +32,16 @@ jobs:
 
       - name: Fetch class raster from the latest Release
         run: |
-          curl -L --fail -o biochar_class_100m.tif \
-            "https://github.com/${{ github.repository }}/releases/latest/download/biochar_class_100m.tif"
-          gdalinfo biochar_class_100m.tif | head -8
+          curl -L --fail -o biochar_class_50m.tif \
+            "https://github.com/${{ github.repository }}/releases/latest/download/biochar_class_50m.tif"
+          gdalinfo biochar_class_50m.tif | head -8
 
       - name: Build national tiles
         run: |
           python3 build_biochar_tiles.py \
-            --class-raster biochar_class_100m.tif \
+            --class-raster biochar_class_50m.tif \
             --out site \
-            --zoom "${{ github.event.inputs.zoom || '3-10' }}"
+            --zoom "${{ github.event.inputs.zoom || '3-11' }}"
 
       - name: Add the viewer to the site root
         run: cp index.html site/index.html
