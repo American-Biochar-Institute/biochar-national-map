@@ -1,10 +1,10 @@
 # Color table for the biochar class raster (biochar_class_*.tif)
-# ABI brand palette, high-contrast (ABI Brand Guide, Jan 2026).
+# ABI brand palette (ABI Brand Guide, Jan 2026).
 # Columns: value  R  G  B  A
 0   0   0   0   0
 1   232 229 222 255
 2   255 194 97  255
-3   255 158 0   255
-4   186 232 194 255
-5   54  69  0   255
+3   186 232 194 255
+4   54  69  0   255
+5   69  23  61  255
 nv  0   0   0   0
