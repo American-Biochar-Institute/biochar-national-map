@@ -3,16 +3,10 @@ name: Build and deploy biochar national map
 on:
   workflow_dispatch:
     inputs:
-      resolution:
-        description: "Grid resolution in meters (300 = detailed browse, 1000 = fast test)"
-        required: true
-        default: "300"
       zoom:
         description: "Tile zoom range"
         required: true
         default: "3-9"
-  schedule:
-    - cron: "0 6 15 11 *"
 
 permissions:
   contents: read
@@ -33,16 +27,13 @@ jobs:
       - name: Install GDAL
         run: |
           sudo apt-get update
-          sudo apt-get install -y gdal-bin python3-gdal python3-numpy
+          sudo apt-get install -y gdal-bin python3-gdal
           gdalinfo --version
 
       - name: Build national tiles
         run: |
           python3 build_biochar_tiles.py \
-            --lookup biochar_national_lookup.csv \
-            --colors biochar_class_colors.txt \
             --out site \
-            --res "${{ github.event.inputs.resolution || '300' }}" \
             --zoom "${{ github.event.inputs.zoom || '3-9' }}"
 
       - name: Add the viewer to the site root
