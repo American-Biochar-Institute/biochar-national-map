@@ -22,7 +22,7 @@
     --ink:#211f1c; --paper:#f6f3ec; --line:#d8d2c4; --moss:#5b6e4f;
     --moss-d:#4f6043; --muted:#6f6a61;
     /* class palette - matches biochar_class_colors.txt exactly */
-    --c-neg:#e8e5de; --c-low:#bfb8a3; --c-fair:#918f7a; --c-good:#666345; --c-exc:#364500;
+    --c-neg:#e8e5de; --c-low:#ffc261; --c-fair:#ff9e00; --c-good:#bae8c2; --c-exc:#364500;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
@@ -56,6 +56,10 @@
     text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff;pointer-events:none;}
   .state-label.small{display:none;}
   #map.zoomed-in .state-label.small{display:block;}
+  /* county name labels */
+  .county-label{background:none;border:none;text-align:center;white-space:nowrap;
+    font:600 10px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#3a3a3a;
+    text-shadow:0 0 2px #fff,0 0 2px #fff;pointer-events:none;}
 
   /* address search box (top-left, under the zoom control) */
   .leaflet-control-geocoder{border-radius:8px !important;box-shadow:0 1px 6px rgba(0,0,0,.18)}
@@ -119,11 +123,21 @@
     attribution: 'Rating: USDA-NRCS SSURGO, SOH - Dynamic Soil Properties Response to Biochar; mukey grid: UC Davis SoilWeb'
   }).addTo(map);
 
-  // ---- county outlines: their own pane, drawn beneath state lines ----
+  // ---- county outlines (zoom 7+) and county names (zoom 8+, in view only) ----
   map.createPane("countyPane");
   map.getPane("countyPane").style.zIndex = 350;
-  var countyLayer = L.layerGroup();
-  var countiesLoaded = false, COUNTY_MIN_ZOOM = 7;
+  var countyLayer = L.layerGroup();          // lines
+  var countyLabelLayer = L.layerGroup();     // names
+  var countyPoints = [], countiesLoaded = false;
+  var COUNTY_MIN_ZOOM = 7, COUNTY_LABEL_ZOOM = 8;
+  function bboxCenter(geom){
+    var mnx=180, mny=90, mxx=-180, mxy=-90;
+    (function scan(c){
+      if (typeof c[0] === "number"){ if(c[0]<mnx)mnx=c[0]; if(c[0]>mxx)mxx=c[0]; if(c[1]<mny)mny=c[1]; if(c[1]>mxy)mxy=c[1]; }
+      else { for (var i=0;i<c.length;i++) scan(c[i]); }
+    })(geom.coordinates);
+    return [(mny+mxy)/2, (mnx+mxx)/2];
+  }
   function loadCounties(){
     if (countiesLoaded) return;
     countiesLoaded = true;
@@ -134,13 +148,45 @@
           pane: "countyPane", interactive: false, renderer: L.canvas({ pane: "countyPane" }),
           style: { color: "#6b6b6b", weight: 0.5, opacity: 0.4, fill: false }
         }).addTo(countyLayer);
+        gj.features.forEach(function(f){
+          var nm = f.properties && (f.properties.NAME || f.properties.name);
+          if (nm){ var ctr = bboxCenter(f.geometry); countyPoints.push({ name: nm, lat: ctr[0], lng: ctr[1] }); }
+        });
+        updateCountyLabels();
       })
       .catch(function(){ countiesLoaded = false; });
+  }
+  function updateCountyLabels(){
+    countyLabelLayer.clearLayers();
+    if (map.getZoom() < COUNTY_LABEL_ZOOM){ if (map.hasLayer(countyLabelLayer)) map.removeLayer(countyLabelLayer); return; }
+    if (!map.hasLayer(countyLabelLayer)) countyLabelLayer.addTo(map);
+    var b = map.getBounds(), shown = 0;
+    for (var i=0; i<countyPoints.length && shown<150; i++){
+      var p = countyPoints[i];
+      if (b.contains([p.lat, p.lng])){
+        L.marker([p.lat, p.lng], { interactive:false, keyboard:false,
+          icon: L.divIcon({ className:"county-label", html:p.name, iconSize:[90,12] }) }).addTo(countyLabelLayer);
+        shown++;
+      }
+    }
   }
   function updateCounties(){
     if (map.getZoom() >= COUNTY_MIN_ZOOM){ loadCounties(); if (!map.hasLayer(countyLayer)) countyLayer.addTo(map); }
     else if (map.hasLayer(countyLayer)) { map.removeLayer(countyLayer); }
+    updateCountyLabels();
   }
+
+  // ---- major waterways (rivers) ----
+  map.createPane("riverPane");
+  map.getPane("riverPane").style.zIndex = 380;
+  var riverLayer = L.layerGroup().addTo(map);
+  fetch("https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_rivers_lake_centerlines.geojson")
+    .then(function(r){ return r.json(); })
+    .then(function(gj){
+      L.geoJSON(gj, { pane:"riverPane", interactive:false,
+        style:{ color:"#5a86ad", weight:1, opacity:0.7 } }).addTo(riverLayer);
+    })
+    .catch(function(){});
 
   // ---- state outlines + abbreviation labels ----
   var statesLayer = L.layerGroup().addTo(map);
@@ -180,10 +226,11 @@
     if (map.getZoom() >= 6) el.classList.add("zoomed-in"); else el.classList.remove("zoomed-in");
     updateCounties();
   }
-  map.on("zoomend", onZoom); onZoom();
+  map.on("zoomend", onZoom); map.on("moveend", updateCountyLabels); onZoom();
 
-  // overlay toggle (top-right); counties appear automatically when zoomed in
-  L.control.layers(null, { "State boundaries &amp; labels": statesLayer },
+  // overlay toggles (top-right); counties appear automatically when zoomed in
+  L.control.layers(null,
+    { "State boundaries &amp; labels": statesLayer, "Major rivers": riverLayer },
     { collapsed:false, position:"topright" }).addTo(map);
 
   // ---- address search: type an address, zoom to that spot ----
