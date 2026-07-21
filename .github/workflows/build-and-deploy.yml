@@ -24,27 +24,55 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Resolve raster version (for the tile cache key)
+        id: rel
+        run: |
+          info=$(curl -sL -H "Authorization: Bearer ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+          ver=$(echo "$info" | jq -r '[.assets[] | select(.name=="biochar_class_50m.tif") | .updated_at] | .[0] // "none"')
+          echo "ver=$ver" >> "$GITHUB_OUTPUT"
+          echo "raster version: $ver"
+
+      - name: Restore tiles cache
+        id: tilecache
+        uses: actions/cache/restore@v4
+        with:
+          path: site/tiles
+          key: tiles-${{ steps.rel.outputs.ver }}-z${{ github.event.inputs.zoom || '3-11' }}-${{ hashFiles('biochar_class_colors.txt', 'build_biochar_tiles.py') }}
+
       - name: Install GDAL
+        if: steps.tilecache.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y gdal-bin python3-gdal
           gdalinfo --version
 
       - name: Fetch class raster from the latest Release
+        if: steps.tilecache.outputs.cache-hit != 'true'
         run: |
           curl -L --fail -o biochar_class_50m.tif \
             "https://github.com/${{ github.repository }}/releases/latest/download/biochar_class_50m.tif"
           gdalinfo biochar_class_50m.tif | head -8
 
       - name: Build national tiles
+        if: steps.tilecache.outputs.cache-hit != 'true'
         run: |
           python3 build_biochar_tiles.py \
             --class-raster biochar_class_50m.tif \
             --out site \
             --zoom "${{ github.event.inputs.zoom || '3-11' }}"
 
+      - name: Save tiles cache
+        if: steps.tilecache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: site/tiles
+          key: tiles-${{ steps.rel.outputs.ver }}-z${{ github.event.inputs.zoom || '3-11' }}-${{ hashFiles('biochar_class_colors.txt', 'build_biochar_tiles.py') }}
+
       - name: Add the viewer to the site root
-        run: cp index.html site/index.html
+        run: |
+          mkdir -p site
+          cp index.html site/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
