@@ -3,7 +3,8 @@
 build_biochar_tiles.py
 Color and tile the committed biochar class raster (biochar_class_300m.tif) into
 an XYZ tile pyramid for GitHub Pages. No data download, no reclass at build time.
-Runs on Ubuntu with GDAL >= 3.1 (needs gdal2tiles --xyz).
+Extra flags (--lookup, --res, --grid-url) are accepted and ignored so this runs
+under the existing workflow unchanged. Needs GDAL >= 3.1 (gdal2tiles --xyz).
 """
 import argparse
 import os
@@ -31,11 +32,14 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--zoom", default="3-9")
     ap.add_argument("--work", default="_work")
+    ap.add_argument("--lookup")
+    ap.add_argument("--res")
+    ap.add_argument("--grid-url")
     args = ap.parse_args()
 
     for f in (args.class_raster, args.colors):
         if not os.path.exists(f):
-            sys.exit("missing input: %s" % f)
+            sys.exit("missing input: %s (is biochar_class_300m.tif committed at the repo root?)" % f)
 
     os.makedirs(args.out, exist_ok=True)
     os.makedirs(args.work, exist_ok=True)
