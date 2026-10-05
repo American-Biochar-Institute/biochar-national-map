@@ -15,14 +15,14 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Soil Response to Biochar - National Map | American Biochar Institute</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css"/>
 <style>
   :root{
     --ink:#211f1c; --paper:#f6f3ec; --line:#d8d2c4; --moss:#5b6e4f;
     --moss-d:#4f6043; --muted:#6f6a61;
     /* class palette - matches biochar_class_colors.txt exactly */
-    --c-neg:#e8e5de; --c-low:#ffc261; --c-fair:#bae8c2; --c-good:#364500; --c-exc:#45173d;
+    --c-neg:#f7fcf5; --c-low:#c7e9c0; --c-fair:#74c476; --c-good:#238b45; --c-exc:#00441b;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
@@ -32,7 +32,7 @@
   header .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b9c4ab;margin:0 0 3px}
   header h1{margin:0;font-family:Georgia,"Iowan Old Style",serif;font-size:19px;font-weight:600}
   header p{margin:2px 0 0;font-size:12px;color:#cfd6c6}
-  #map{flex:1 1 auto;min-height:320px;background:var(--paper)}
+  #map{flex:1 1 auto;min-height:320px;margin-right:390px;background:var(--paper)}
 
   .panel{position:absolute;z-index:1000;background:rgba(246,243,236,.97);border:1px solid var(--line);
     border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.18);font-size:12.5px;line-height:1.5;color:var(--ink)}
@@ -74,6 +74,21 @@
     #legend{max-width:180px}
     .leaflet-control-geocoder-form input{width:150px}
   }
+
+ #acreage{bottom:22px;right:12px;width:365px;max-height:calc(100% - 110px);overflow:auto;padding:16px;background:rgba(255,255,255,.97)}
+ #acreage h2{font:700 18px/1.25 Georgia,serif;margin:0 0 13px;color:#184a2b}
+ #acreage label{display:block;font-weight:600;margin-top:9px;font-size:12px}
+ #acreage select{width:100%;padding:7px;font:inherit;border:1px solid #cbd5cc;border-radius:4px;background:#fff}
+ #acreage h3{font-size:14px;margin:16px 0 9px}
+ #acreage table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12px}
+ #acreage th,#acreage td{padding:5px 2px;border-bottom:1px solid #e1e8e1;text-align:right}
+ #acreage th:first-child{text-align:left} #acreage tbody th{font-weight:500}
+ .acreage-swatch{display:inline-block;width:13px;height:13px;border:1px solid #b9c9bb;margin-right:5px;vertical-align:middle}
+ #acreage .acreage-total{font-weight:700} #acreage .acreage-total th{font-weight:700}
+ #acreage-status{font-size:11px;color:#506255;margin:10px 0}
+ #acreage-export{font:inherit;font-size:12px;padding:7px 10px;color:#164a2b;border:1px solid #9caf9f;background:#eff7ee;border-radius:4px;cursor:pointer}
+ #acreage .note{font-size:10.5px;line-height:1.4;color:#596359;margin:10px 0 0}
+ @media(max-width:640px){#map{margin-right:0}#acreage{width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
 </style>
 </head>
 <body>
@@ -96,20 +111,22 @@
   lines; draw-an-area detail is handled by the Institute's separate area tool.</p>
 </div>
 
-<div id="legend" class="panel">
-  <div class="lt">Expected response to biochar</div>
-  <div class="row"><span class="sw" style="background:var(--c-exc)"></span>Excellent (0.751 - 1.0)</div>
-  <div class="row"><span class="sw" style="background:var(--c-good)"></span>Good (0.501 - 0.750)</div>
-  <div class="row"><span class="sw" style="background:var(--c-fair)"></span>Fair (0.251 - 0.500)</div>
-  <div class="row"><span class="sw" style="background:var(--c-low)"></span>Low (0.001 - 0.250)</div>
-  <div class="row"><span class="sw" style="background:var(--c-neg)"></span>Negligible (0)</div>
-  <div class="note">The rating describes the soil as mapped, in its native condition,
-  not a drained or managed field. Areas with no SSURGO rating are left unshaded.</div>
-</div>
+<section id="acreage" class="panel" aria-label="Biochar response acreage">
+ <h2>Estimated acres by response class</h2>
+ <label for="acreage-state">State</label><select id="acreage-state" disabled><option value="">Contiguous U.S.</option></select>
+ <label for="acreage-county">County or equivalent</label><select id="acreage-county" disabled><option value="">Select a state first</option></select>
+ <h3 id="acreage-area-title">Contiguous U.S.</h3>
+ <table><thead><tr><th scope="col">Response</th><th scope="col">Whole area<br>acres</th><th scope="col">Current view<br>acres</th></tr></thead><tbody id="acreage-rows"></tbody></table>
+ <p id="acreage-status" role="status">Loading acreage data…</p>
+ <button id="acreage-export" type="button">Download acreage CSV</button>
+ <p class="note">Darker green means greater expected response. Ratings: Excellent 0.751–1, Good 0.501–0.750, Fair 0.251–0.500, Low 0.001–0.250, Negligible 0.</p>
+ <p class="note">Estimates use the 300 m class raster and cell centers. Rounded acres include all mapped land uses. Current view may cross state or county boundaries. Unrated area stays separate. Outside county boundaries is excluded.</p>
+ <p class="note">NRCS ratings describe soils as mapped in their native condition. They do not predict crop yield or establish funding eligibility.</p>
+</section>
 
 <div id="resnote">This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute's area tool for field-level detail.</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
 <script>
   // ---- tile pyramid produced by the build workflow (XYZ scheme) ----
@@ -118,14 +135,29 @@
   var NATIVE_MAX_ZOOM = 11;     // top zoom actually built; keep in sync with the workflow "zoom" input
 
   // zoomControl is on by default (the +/- buttons, top-left)
-  var map = L.map("map", { center: [39.5, -98.35], zoom: 4, minZoom: 3 });
+  var map = L.map("map", { center: [39.5, -98.35], zoom: 4, minZoom: 3, maxZoom: 15 });
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; OpenStreetMap, &copy; CARTO', subdomains: "abcd", maxZoom: 19
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
   }).addTo(map);
 
-  L.tileLayer(TILE_URL, {
-    tms: TMS, opacity: 0.82, maxNativeZoom: NATIVE_MAX_ZOOM, maxZoom: 14,
+  // Recolor the existing class tiles, preserving their original spatial resolution.
+  var greenByRGB = {'232,229,222':[247,252,245],'255,194,97':[199,233,192],
+    '186,232,194':[116,196,118],'54,69,0':[35,139,69],'69,23,61':[0,68,27]};
+  var GreenClassLayer = L.TileLayer.extend({createTile:function(coords,done){
+    var tile=document.createElement('canvas');tile.width=tile.height=256;
+    var img=new Image();img.crossOrigin='anonymous';
+    img.onload=function(){try{var ctx=tile.getContext('2d');ctx.drawImage(img,0,0,256,256);
+      var frame=ctx.getImageData(0,0,256,256),a=frame.data;
+      for(var i=0;i<a.length;i+=4){if(!a[i+3])continue;var rgb=greenByRGB[a[i]+','+a[i+1]+','+a[i+2]];
+        if(rgb){a[i]=rgb[0];a[i+1]=rgb[1];a[i+2]=rgb[2];}}
+      ctx.putImageData(frame,0,0);done(null,tile);
+    }catch(error){done(error,tile);}};
+    img.onerror=function(){done(new Error('Class tile unavailable'),tile);};
+    img.src=this.getTileUrl(coords);return tile;
+  }});
+  new GreenClassLayer(TILE_URL, {
+    tms: TMS, opacity: 0.82, maxNativeZoom: NATIVE_MAX_ZOOM, maxZoom: 15,
     attribution: 'Rating: USDA-NRCS SSURGO, SOH - Dynamic Soil Properties Response to Biochar; mukey grid: UC Davis SoilWeb'
   }).addTo(map);
 
@@ -147,7 +179,7 @@
   function loadCounties(){
     if (countiesLoaded) return;
     countiesLoaded = true;
-    fetch("https://cdn.jsdelivr.net/gh/plotly/datasets@master/geojson-counties-fips.json")
+    fetch("counties.geojson")
       .then(function(r){ return r.json(); })
       .then(function(gj){
         L.geoJSON(gj, {
@@ -236,7 +268,7 @@
       icon: L.divIcon({ className: "state-label" + (p[2] ? " small" : ""), html: ab, iconSize: [22, 12] })
     }).addTo(statesLayer);
   });
-  fetch("https://cdn.jsdelivr.net/gh/PublicaMundi/MappingAPI@master/data/geojson/us-states.json")
+  fetch("states.geojson")
     .then(function(r){ return r.json(); })
     .then(function(gj){
       var skip = { Alaska:1, Hawaii:1, "Puerto Rico":1 };
@@ -297,5 +329,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
+<script src="acreage.js"></script>
 </body>
 </html>
