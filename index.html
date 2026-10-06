@@ -95,6 +95,8 @@
  .aoi-entry .aoi-access{margin:8px 0 0;font-size:11px;color:#596359}
  #acreage .note{font-size:10.5px;line-height:1.4;color:#596359;margin:10px 0 0}
  @media(max-width:640px){header{flex-wrap:wrap;padding:10px 12px}.mode-tabs{width:100%}.mode-tabs button{flex:1}#map{right:0}#acreage{top:auto;width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
+
+.area-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.area-controls>div{min-width:0}.national-question{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}.national-question label{margin-top:0!important}.national-info{width:32px;height:32px;padding:5px;flex:none;border:0;background:transparent;color:#45173d;cursor:pointer}.national-info svg{display:block;width:22px;height:22px}.national-info:focus-visible{outline:2px solid #45173d}.national-help{font-size:12px;line-height:1.45;padding:9px;background:#f3f6ef;border:1px solid #cbd5c4;border-radius:4px}#scenario-status{font-size:11px;line-height:1.4;color:#506255}
 </style>
 <script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded-map");</script><style>.embedded-map header{display:none}</style>
 </head>
@@ -115,28 +117,38 @@
   <button class="close-x" type="button" aria-label="Dismiss" title="Dismiss"
           onclick="this.parentElement.style.display='none'">&times;</button>
   <div class="lt">About this map</div>
-  <p>Each color is the USDA-NRCS interpretation <i>SOH - Dynamic Soil Properties
+  <p id="about-rating">Each color is the USDA-NRCS interpretation <i>SOH - Dynamic Soil Properties
   Response to Biochar</i>, which estimates how much biochar is expected to improve
   a soil's dynamic properties. Higher means more expected gain. Zoom in for county
   lines; switch to Area of interest for aerial imagery and field-level detail.</p>
 </div>
 
 <section id="acreage" class="panel" aria-label="Biochar response acreage">
- <h2>Estimated acres by response class</h2>
+ <h2 id="rating-title">NRCS acres by response class</h2>
+ <label for="rating-mode">Rating shown</label><select id="rating-mode" disabled><option value="nrcs">USDA-NRCS published</option><option value="abi">ABI exploratory score</option></select>
+ <div id="national-assumptions" hidden>
+ <div class="national-question"><label for="national-drainage">Is the land artificially drained?</label><button class="national-info" type="button" aria-label="About artificial drainage" aria-controls="national-drainage-help" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg></button></div>
+ <div id="national-drainage-help" class="national-help" hidden>NRCS describes artificial drainage as removing free water from wet soils using surface mounding, ditches, or subsurface tiles, substantially changing the water table for a land use. Choose Yes for functioning drainage. <a href="https://www.nrcs.usda.gov/sites/default/files/2022-06/Soil%20Taxonomy.pdf" target="_blank" rel="noopener noreferrer">NRCS Soil Taxonomy</a></div>
+ <select id="national-drainage"><option value="">Choose yes or no</option><option value="yes">Yes</option><option value="no">No</option></select>
+ <div class="national-question"><label for="national-ph">Do you want biochar to raise soil pH?</label><button class="national-info" type="button" aria-label="About raising soil pH" aria-controls="national-ph-help" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg></button></div>
+ <div id="national-ph-help" class="national-help" hidden>Raising pH makes an acidic soil less acidic. Some biochars have a liming effect, depending on the product and rate. Choose Yes if raising pH is a goal. Choose No if it is not a goal. Follow soil-test recommendations and the product's measured liming value.</div>
+ <select id="national-ph"><option value="">Choose yes or no</option><option value="yes">Yes</option><option value="no">No</option></select>
+ </div><p id="scenario-status" role="status">USDA-NRCS published rating.</p>
+ 
+
+ <div class="area-controls"><div><label for="acreage-state">State</label><select id="acreage-state" disabled><option value="">Contiguous U.S.</option></select></div><div> <label for="acreage-county">County or equivalent</label><select id="acreage-county" disabled><option value="">Select a state first</option></select></div></div>
+ <h3 id="acreage-area-title">Contiguous U.S.</h3>
+ <table><thead><tr><th scope="col">Response</th><th scope="col">Whole area<br>acres</th><th scope="col">Current view<br>acres</th></tr></thead><tbody id="acreage-rows"></tbody></table>
+ <p id="acreage-status" role="status">Loading acreage data…</p>
  <div class="aoi-entry">
   <p id="aoi-description">Explore a field on aerial imagery using live SSURGO soil polygons and response ratings.</p>
   <button class="aoi-link" id="aoi-explorer-link" type="button" aria-describedby="aoi-access">Draw an area of interest</button>
   <p class="aoi-access" id="aoi-access">Switches to the aerial AOI tab on this page. No sign-in required.</p>
  </div>
- <label for="acreage-state">State</label><select id="acreage-state" disabled><option value="">Contiguous U.S.</option></select>
- <label for="acreage-county">County or equivalent</label><select id="acreage-county" disabled><option value="">Select a state first</option></select>
- <h3 id="acreage-area-title">Contiguous U.S.</h3>
- <table><thead><tr><th scope="col">Response</th><th scope="col">Whole area<br>acres</th><th scope="col">Current view<br>acres</th></tr></thead><tbody id="acreage-rows"></tbody></table>
- <p id="acreage-status" role="status">Loading acreage data…</p>
  <button id="acreage-export" type="button">Download acreage CSV</button>
  <p class="note">Darker green means greater expected response. Ratings: Excellent 0.751–1, Good 0.501–0.750, Fair 0.251–0.500, Low 0.001–0.250, Negligible 0.</p>
- <p class="note">Estimates use the 300 m class raster and cell centers. Rounded acres include all mapped land uses. Current view may cross state or county boundaries. Unrated area stays separate. Outside county boundaries is excluded.</p>
- <p class="note">NRCS ratings describe soils as mapped in their native condition. They do not predict crop yield or establish funding eligibility.</p>
+ <p id="resolution-note" class="note">Estimates use the 300 m class raster and cell centers. Rounded acres include all mapped land uses. Current view may cross state or county boundaries. Unrated area stays separate. Outside county boundaries is excluded.</p>
+ <p id="rating-note" class="note">NRCS ratings describe soils as mapped in their native condition. They do not predict crop yield or establish funding eligibility.</p>
 </section>
 
 <div id="resnote">This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute's area tool for field-level detail.</div>
@@ -176,7 +188,7 @@
     img.onerror=function(){done(new Error('Class tile unavailable'),tile);};
     img.src=this.getTileUrl(coords);return tile;
   }});
-  new GreenClassLayer(TILE_URL, {
+  var nrcsLayer = new GreenClassLayer(TILE_URL, {
     tms: TMS, opacity: 0.82, maxNativeZoom: NATIVE_MAX_ZOOM, maxZoom: 15,
     attribution: 'Rating: USDA-NRCS SSURGO, SOH - Dynamic Soil Properties Response to Biochar; mukey grid: UC Davis SoilWeb'
   }).addTo(map);
@@ -326,7 +338,7 @@
     updateCounties();
     updateCityLabels();
     if (map.getZoom() >= 5) loadInterstates();
-    document.getElementById("resnote").style.display = (map.getZoom() >= 12) ? "block" : "none";
+    document.getElementById("resnote").style.display = (map.getZoom() >= (window.abiExploratoryActive?9:12)) ? "block" : "none";
   }
   function onMove(){ updateCountyLabels(); updateCityLabels(); }
   map.on("zoomend", onZoom); map.on("moveend", onMove); onZoom();
@@ -349,6 +361,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
-<script src="acreage.js?v=20261006-tabs2"></script>
+<script src="acreage.js?v=20261006-national-abi4"></script>
 </body>
 </html>
