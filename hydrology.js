@@ -33,20 +33,6 @@
     cache.set(key, result); while (cache.size > 16) cache.delete(cache.keys().next().value);
     return result;
   }
-  async function waterImage(map, signal) {
-    var b = map.getBounds(), sw = map.options.crs.project(b.getSouthWest()), ne = map.options.crs.project(b.getNorthEast()), size = map.getSize();
-    var scale = Math.min(1, 2048 / Math.max(size.x, size.y));
-    var params = new URLSearchParams({ bbox: [sw.x, sw.y, ne.x, ne.y].join(','), bboxSR: '3857', imageSR: '3857',
-      size: Math.round(size.x * scale) + ',' + Math.round(size.y * scale), dpi: '96', transparent: 'true', format: 'png32',
-      layers: 'show:7,9,10,12', layerDefs: JSON.stringify({ 7: "FTYPE = 'StreamRiver'", 9: 'FTYPE = 460', 10: "FTYPE IN ('LakePond','Reservoir')", 12: 'FTYPE IN (390,436)' }), f: 'json' });
-    var r = await fetch(service.replace(/\/$/, '') + '/export?' + params, { signal: signal });
-    if (!r.ok) throw Error('USGS water image unavailable'); var j = await r.json();
-    if (j.error || !j.href || !j.extent) throw Error('USGS water image unavailable');
-    await new Promise(function (resolve, reject) { var img = new Image(); img.onload = resolve; img.onerror = function () { reject(Error('USGS water image unavailable')); };
-      signal.addEventListener('abort', function () { img.src = ''; reject(Error('Water request cancelled')); }, { once: true }); img.src = j.href; });
-    var e = j.extent, bounds = L.latLngBounds(map.options.crs.unproject(L.point(e.xmin, e.ymin)), map.options.crs.unproject(L.point(e.xmax, e.ymax)));
-    return L.imageOverlay(j.href, bounds, { pane: 'waterPane', interactive: false, opacity: 0.95 });
-  }
   function name(f) { var p = f.properties || {}; return String(p.gnis_name || p.GNIS_NAME || p.name || p.name_en || '').trim(); }
   function waterType(p) { var value = p.FTYPE || p.ftype, numeric = Number(value); if (Number.isFinite(numeric)) return numeric;
     return { streamriver: 460, artificialpath: 558, connector: 334, lakepond: 390, reservoir: 436 }[String(value).toLowerCase().replace(/[^a-z]/g, '')] || 0;
@@ -58,8 +44,8 @@
   var WaterLayer = L.Layer.extend({
     initialize: function (kind) { this.kind = kind; this._group = L.layerGroup(); this._refresh = this._refresh.bind(this); this._generation = 0; },
     onAdd: function (map) { this._map = map; this._group.addTo(map); map.on('moveend', this._refresh); this._refresh(); },
-    onRemove: function (map) { map.off('moveend', this._refresh); map.removeLayer(this._group); this._generation++; clearTimeout(this._timer); if (this._abort) this._abort.abort(); this._map = null; this._status(''); },
-    getAttribution: function () { return 'Water: <a href="https://www.naturalearthdata.com/">Natural Earth</a>, <a href="https://www.usgs.gov/national-hydrography">USGS</a>'; },
+    onRemove: function (map) { map.off('moveend', this._refresh); map.removeLayer(this._group); this._generation++; clearTimeout(this._timer); clearTimeout(this._retryTimer); if (this._abort) this._abort.abort(); this._map = null; this._status(''); },
+    getAttribution: function () { return 'Water: <a href="https://www.naturalearthdata.com/">Natural Earth</a>' + (this.kind === 'rivers' ? ', <a href="https://www.usgs.gov/national-hydrography">USGS</a>' : ''); },
     _status: function (text) { var el = document.getElementById('water-status-' + this.kind); if (el) { el.textContent = text; el.style.display = text ? 'block' : 'none'; } },
     _paint: function (collections, detailed) {
       if (!this._map) return;
@@ -85,25 +71,20 @@
           icon: L.divIcon({ className: 'water-name', html: label.outerHTML, iconSize: [160, 16], iconAnchor: [80, 8] }) }).addTo(group);
       });
     },
-    _refresh: function () {
-      var self = this; clearTimeout(this._timer); if (this._abort) this._abort.abort(); var generation = ++this._generation;
+    _refresh: function (retry) {
+      var self = this; clearTimeout(this._timer); clearTimeout(this._retryTimer); if(retry !== true) this._retries = 0; if (this._abort) this._abort.abort(); var generation = ++this._generation;
       this._timer = setTimeout(async function () {
         if (!self._map) return; var map = self._map, zoom = map.getZoom();
         try { var gj = await loadOverview(self.kind); if (generation !== self._generation) return;
-          if (self.kind === 'water' && self._waterImage && self._waterImage.getBounds().contains(map.getBounds())) { self._group.clearLayers(); self._waterImage.addTo(self._group); }
-          else if (self._detail && self._detailBounds.contains(map.getBounds())) self._paint(self._detail, true); else self._paint([gj], false);
+          if (self._detail && self._detailBounds.contains(map.getBounds())) self._paint(self._detail, true); else self._paint([gj], false);
         } catch (e) { self._status('Water overview unavailable.'); }
         if (generation !== self._generation || !self._map) return;
+        if (self.kind === 'water') { self._status(''); return; }
         if (zoom < (self.kind === 'rivers' ? 8 : 10)) { self._status(''); return; }
         self._abort = new AbortController(); var abort = self._abort; var timeout = setTimeout(function () { abort.abort(); }, 30000);
         self._status('Loading water detail…');
         try {
           var bounds = map.getBounds(); var data;
-          if (self.kind === 'water') {
-            var image = await waterImage(map, abort.signal);
-            if (generation === self._generation && self._map) { self._waterImage = image; self._group.clearLayers(); image.addTo(self._group); self._status(''); }
-            return;
-          }
           if (self.kind === 'rivers') {
             var lines = await query(zoom >= 12 ? 6 : 4, zoom >= 12 ? '1=1' : "StreamOrde >= " + (zoom <= 8 ? 7 : zoom === 9 ? 6 : 5) + " OR GNIS_NAME LIKE '%River%'", bounds, zoom, abort.signal);
             data = [{ type: 'FeatureCollection', features: lines.features.filter(function (f) {
@@ -111,7 +92,10 @@
             }) }];
           }
           if (generation === self._generation && self._map) { self._detail = data; self._detailBounds = bounds; self._paint(data, true); self._status(''); }
-        } catch (e) { if (generation === self._generation && self._map) { console.warn('Water detail: ' + e.message); self._status('USGS water detail unavailable.'); } }
+        } catch (e) { if (generation === self._generation && self._map) { console.warn('Water detail: ' + e.message);
+          if(self._retries < 2) { self._retries++; self._status('Retrying water detail…'); self._retryTimer = setTimeout(function(){self._refresh(true);},1000); }
+          else self._status('USGS water detail unavailable.');
+        } }
         finally { clearTimeout(timeout); }
       }, 250);
     }

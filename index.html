@@ -165,7 +165,7 @@
 <section id="aoi-panel" role="tabpanel" aria-labelledby="aoi-tab" hidden><p id="aoi-loading" class="mode-loading" role="status" hidden>Loading the aerial AOI map…</p><iframe id="aoi-frame" title="Draw an area of interest and explore soil response" allow="fullscreen"></iframe></section>
 </div></div>
 <script src="leaflet.js"></script>
-<script src="hydrology.js?v=20261006-native30m-final"></script>
+<script src="hydrology.js?v=20261006-native30m-rivers"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
 <script>
   // zoomControl is on by default (the +/- buttons, top-left)
@@ -320,7 +320,7 @@
 
   // overlay toggles (top-right); counties appear automatically when zoomed in
   var overlayControl = L.control.layers(null,
-    { "State boundaries &amp; labels": statesLayer, "Major rivers": majorRiversLayer, "Lakes &amp; river channels": waterLayer, "Interstates": interstateLayer },
+    { "State boundaries &amp; labels": statesLayer, "Major rivers": majorRiversLayer, "Lakes &amp; reservoirs": waterLayer, "Interstates": interstateLayer },
     { collapsed:false, position:"topright" }).addTo(map);
   ["rivers", "water"].forEach(function(kind){
     var status = document.createElement("div"); status.id = "water-status-" + kind;
