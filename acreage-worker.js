@@ -3,8 +3,8 @@ const ALBERS='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0
 let loadedName,ready;
 async function load(name='nrcs'){
  const path=name==='nrcs'?'acreage-summary.json':'exploratory/'+name+'-summary.json';
- const metadata=await (await fetch(path)).json();
- const response=await fetch(metadata.grid.path);
+ const metadata=await (await fetch(path+(name==='nrcs'?'':'?v=20261006-adjusted-ids'))).json();
+ const response=await fetch(metadata.grid.path+(name==='nrcs'?'':'?v=20261006-adjusted-ids'));
  if(!response.ok)throw new Error('Acreage grid unavailable');
  const stream=response.body.pipeThrough(new DecompressionStream('gzip'));
  const raster=new Uint8Array(await new Response(stream).arrayBuffer());

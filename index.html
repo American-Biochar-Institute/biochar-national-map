@@ -126,8 +126,8 @@
 
 <section id="acreage" class="panel" aria-label="Biochar response acreage">
  <h2 id="rating-title">NRCS acres by response class</h2>
- <label for="rating-mode">Rating shown</label><select id="rating-mode" disabled><option value="nrcs">USDA-NRCS published</option><option value="abi">ABI exploratory score</option></select>
- <div id="national-assumptions" hidden>
+ <label for="rating-mode">Rating shown</label><select id="rating-mode" disabled><option value="nrcs">USDA-NRCS published</option><option value="abi">ABI adjusted response score</option></select>
+ <div id="national-assumptions" hidden><p>Response estimate adjusted for your drainage and soil pH goals.</p>
  <div class="national-question"><label for="national-drainage">Is the land artificially drained?</label><button class="national-info" type="button" aria-label="About artificial drainage" aria-controls="national-drainage-help" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg></button></div>
  <div id="national-drainage-help" class="national-help" hidden>NRCS describes artificial drainage as removing free water from wet soils using surface mounding, ditches, or subsurface tiles, substantially changing the water table for a land use. Choose Yes for functioning drainage. <a href="https://www.nrcs.usda.gov/sites/default/files/2022-06/Soil%20Taxonomy.pdf" target="_blank" rel="noopener noreferrer">NRCS Soil Taxonomy</a></div>
  <select id="national-drainage"><option value="">Choose yes or no</option><option value="yes">Yes</option><option value="no">No</option></select>
@@ -363,6 +363,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
-<script src="acreage.js?v=20261006-national-abi5"></script>
+<script src="acreage.js?v=20261006-adjusted-ids"></script>
 </body>
 </html>
