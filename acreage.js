@@ -60,7 +60,7 @@
   document.getElementById('resolution-note').textContent=abi?'Exploratory colors and acreage use a 300 m grid from saved FY2026 gSSURGO data. Use Area of interest for live soil-polygon detail. Unrated or unavailable model results stay separate.':'Estimates use the 300 m class raster and cell centers. Rounded acres include all mapped land uses. Current view may cross state or county boundaries. Unrated area stays separate. Outside county boundaries is excluded.';
   document.getElementById('resnote').textContent=abi?'The ABI exploratory overview uses 300 m cells. Zooming enlarges those cells; use Area of interest for soil-polygon detail.':'This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute\'s area tool for field-level detail.';
   document.getElementById('resnote').style.display=map.getZoom()>=(abi?9:12)?'block':'none';
-  document.getElementById('mode-description').textContent=abi?'ABI exploratory scenario — 300 m national overview':'USDA-NRCS published rating, read as native soil condition';
+  if(!nationalPanel.hidden)document.getElementById('mode-description').textContent=abi?'ABI exploratory scenario — 300 m national overview':'USDA-NRCS published rating, read as native soil condition';
  }
  async function updateScenario(broadcast=true){
   if(broadcast!==false)broadcastScenario();
