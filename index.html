@@ -28,11 +28,11 @@
   html,body{height:100%;margin:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink)}
   #app{display:flex;flex-direction:column;height:100%}
-  header{background:var(--ink);color:var(--paper);padding:12px 18px 11px;border-bottom:3px solid var(--moss)}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--ink);color:var(--paper);padding:12px 18px 11px;border-bottom:3px solid var(--moss)}
   header .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b9c4ab;margin:0 0 3px}
   header h1{margin:0;font-family:Georgia,"Iowan Old Style",serif;font-size:19px;font-weight:600}
   header p{margin:2px 0 0;font-size:12px;color:#cfd6c6}
-  #map{flex:1 1 auto;min-height:320px;margin-right:390px;background:var(--paper)}
+  #workspace{position:relative;flex:1;min-height:0}#national-panel,#aoi-panel{position:absolute;inset:0}#map{position:absolute;inset:0;right:390px;background:var(--paper)}#aoi-frame{width:100%;height:100%;border:0;display:block;background:var(--paper)}[hidden]{display:none!important}.mode-tabs{display:flex;gap:6px}.mode-tabs button{font-family:inherit;font-weight:600;font-size:12px;line-height:1.3;color:var(--paper);padding:10px 14px;background:transparent;border:1px solid #6b705e;border-radius:5px;cursor:pointer;white-space:nowrap}.mode-tabs button[aria-selected=true]{background:var(--paper);color:#364500}.mode-tabs button:focus-visible{outline:3px solid #ffc261;outline-offset:2px}.mode-loading{position:absolute;top:20px;left:20px;color:#364500;background:var(--paper);padding:12px;z-index:2}
 
   .panel{position:absolute;z-index:1000;background:rgba(246,243,236,.97);border:1px solid var(--line);
     border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.18);font-size:12.5px;line-height:1.5;color:var(--ink)}
@@ -89,23 +89,27 @@
  #acreage-export{font:inherit;font-size:12px;padding:7px 10px;color:#164a2b;border:1px solid #9caf9f;background:#eff7ee;border-radius:4px;cursor:pointer}
  .aoi-entry{margin:0 0 14px;padding:12px;background:#f3f6ef;border:1px solid #cbd5c4;border-radius:6px}
  .aoi-entry p{margin:0 0 8px;font-size:12px;line-height:1.4;color:#474540}
- .aoi-entry .aoi-link{display:block;padding:9px 12px;border-radius:4px;background:#364500;color:#fff;text-align:center;font-weight:600;text-decoration:none}
+ .aoi-entry .aoi-link{width:100%;font:inherit;border:0;cursor:pointer;display:block;padding:9px 12px;border-radius:4px;background:#364500;color:#fff;text-align:center;font-weight:600;text-decoration:none}
  .aoi-entry .aoi-link:hover{background:#45173d}
  .aoi-entry .aoi-link:focus-visible{outline:3px solid #45173d;outline-offset:3px}
  .aoi-entry .aoi-access{margin:8px 0 0;font-size:11px;color:#596359}
  #acreage .note{font-size:10.5px;line-height:1.4;color:#596359;margin:10px 0 0}
- @media(max-width:640px){#map{margin-right:0}#acreage{width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
+ @media(max-width:640px){header{flex-wrap:wrap;padding:10px 12px}.mode-tabs{width:100%}.mode-tabs button{flex:1}#map{right:0}#acreage{width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
 </style>
+<script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded-map");</script><style>.embedded-map header{display:none}</style>
 </head>
 <body>
 <div id="app">
   <header>
+   <div>
     <p class="eyebrow">American Biochar Institute</p>
-    <h1>Soil Response to Biochar: national overview</h1>
-    <p>USDA-NRCS published rating, read as native soil condition</p>
+    <h1>Soil response to biochar</h1>
+    <p id="mode-description">USDA-NRCS published rating, read as native soil condition</p>
+   </div>
+   <nav class="mode-tabs" role="tablist" aria-label="Map modes"><button id="national-tab" type="button" role="tab" aria-selected="true" aria-controls="national-panel">National overview</button><button id="aoi-tab" type="button" role="tab" aria-selected="false" aria-controls="aoi-panel" tabindex="-1">Area of interest</button></nav>
   </header>
-  <div id="map"></div>
-</div>
+ <div id="workspace">
+ <section id="national-panel" role="tabpanel" aria-labelledby="national-tab"><div id="map"></div>
 
 <div id="about" class="panel">
   <button class="close-x" type="button" aria-label="Dismiss" title="Dismiss"
@@ -114,15 +118,15 @@
   <p>Each color is the USDA-NRCS interpretation <i>SOH - Dynamic Soil Properties
   Response to Biochar</i>, which estimates how much biochar is expected to improve
   a soil's dynamic properties. Higher means more expected gain. Zoom in for county
-  lines; draw-an-area detail is handled by the Institute's separate area tool.</p>
+  lines; switch to Area of interest for aerial imagery and field-level detail.</p>
 </div>
 
 <section id="acreage" class="panel" aria-label="Biochar response acreage">
  <h2>Estimated acres by response class</h2>
  <div class="aoi-entry">
   <p id="aoi-description">Explore a field on aerial imagery using live SSURGO soil polygons and response ratings.</p>
-  <a class="aoi-link" id="aoi-explorer-link" href="https://biochar-aoi-public.abi-verified-api.workers.dev/" target="_blank" rel="noopener noreferrer" aria-describedby="aoi-access">Draw an area of interest &nearr;</a>
-  <p class="aoi-access" id="aoi-access">Opens the public aerial AOI tool in a new tab. No sign-in required.</p>
+  <button class="aoi-link" id="aoi-explorer-link" type="button" aria-describedby="aoi-access">Draw an area of interest</button>
+  <p class="aoi-access" id="aoi-access">Switches to the aerial AOI tab on this page. No sign-in required.</p>
  </div>
  <label for="acreage-state">State</label><select id="acreage-state" disabled><option value="">Contiguous U.S.</option></select>
  <label for="acreage-county">County or equivalent</label><select id="acreage-county" disabled><option value="">Select a state first</option></select>
@@ -137,6 +141,9 @@
 
 <div id="resnote">This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute's area tool for field-level detail.</div>
 
+</section>
+<section id="aoi-panel" role="tabpanel" aria-labelledby="aoi-tab" hidden><p id="aoi-loading" class="mode-loading" role="status" hidden>Loading the aerial AOI map…</p><iframe id="aoi-frame" title="Draw an area of interest and explore soil response" allow="fullscreen"></iframe></section>
+</div></div>
 <script src="leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
 <script>
@@ -146,7 +153,9 @@
   var NATIVE_MAX_ZOOM = 11;     // top zoom actually built; keep in sync with the workflow "zoom" input
 
   // zoomControl is on by default (the +/- buttons, top-left)
-  var map = L.map("map", { center: [39.5, -98.35], zoom: 4, minZoom: 3, maxZoom: 15 });
+  var initialCenter=[39.5,-98.35],initialZoom=4,initialLocation=location.hash.match(/^#map=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+)$/);
+  if(initialLocation&&+initialLocation[1]>=-85&&+initialLocation[1]<=85&&+initialLocation[2]>=-180&&+initialLocation[2]<=180){initialCenter=[+initialLocation[1],+initialLocation[2]];initialZoom=Math.max(3,Math.min(15,+initialLocation[3]));}
+  var map = L.map("map", { center: initialCenter, zoom: initialZoom, minZoom: 3, maxZoom: 15 });
 
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
@@ -340,6 +349,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
-<script src="acreage.js?v=20261006-aoi"></script>
+<script src="acreage.js?v=20261006-tabs"></script>
 </body>
 </html>

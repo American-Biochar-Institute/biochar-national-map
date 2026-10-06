@@ -1,6 +1,26 @@
 (function(){
- const aoiLink=document.getElementById('aoi-explorer-link');
- if(aoiLink)aoiLink.addEventListener('click',()=>{const center=map.getCenter();aoiLink.href='https://biochar-aoi-public.abi-verified-api.workers.dev/#map='+center.lat.toFixed(6)+','+center.lng.toFixed(6)+','+map.getZoom();});
+ const aoiLink=document.getElementById('aoi-explorer-link'),nationalTab=document.getElementById('national-tab'),aoiTab=document.getElementById('aoi-tab');
+ const aoiFrame=document.getElementById('aoi-frame'),nationalPanel=document.getElementById('national-panel'),aoiPanel=document.getElementById('aoi-panel');
+ const embedded=new URLSearchParams(location.search).get('embedded')==='1';
+ const aoiOrigin=location.origin==='http://127.0.0.1:8766'?'http://127.0.0.1:8788':'https://biochar-aoi-public.abi-verified-api.workers.dev';
+ let areaFit=Promise.resolve(),modeRequest=0;
+ async function switchMode(mode){
+  if(embedded){const parentOrigin=new URL(document.referrer||location.href).origin;if([aoiOrigin,'http://127.0.0.1:8788'].includes(parentOrigin))parent.postMessage({type:'abi-map-mode',mode},parentOrigin);return;}
+  const request=++modeRequest;
+  if(mode==='aoi'&&!aoiFrame.getAttribute('src'))await areaFit;
+  if(request!==modeRequest)return;
+  const aoi=mode==='aoi';nationalPanel.hidden=aoi;aoiPanel.hidden=!aoi;
+  nationalTab.setAttribute('aria-selected',String(!aoi));aoiTab.setAttribute('aria-selected',String(aoi));nationalTab.tabIndex=aoi?-1:0;aoiTab.tabIndex=aoi?0:-1;
+  document.getElementById('mode-description').textContent=aoi?'Aerial imagery and live mapped soil detail':'USDA-NRCS published rating, read as native soil condition';
+  if(aoi&&!aoiFrame.getAttribute('src')){const center=map.getCenter();document.getElementById('aoi-loading').hidden=false;aoiFrame.src=aoiOrigin+'/?embedded=1#map='+center.lat.toFixed(6)+','+center.lng.toFixed(6)+','+map.getZoom();}
+  else if(aoi)aoiFrame.contentWindow.postMessage({type:'abi-map-resume'},aoiOrigin);
+  else requestAnimationFrame(()=>map.invalidateSize({pan:false}));
+ }
+ aoiFrame.addEventListener('load',()=>{document.getElementById('aoi-loading').hidden=true;});
+ if(aoiLink)aoiLink.addEventListener('click',()=>{switchMode('aoi');if(!embedded)aoiTab.focus();});
+ nationalTab.addEventListener('click',()=>switchMode('national'));aoiTab.addEventListener('click',()=>switchMode('aoi'));
+ for(const tab of [nationalTab,aoiTab])tab.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const next=e.key==='Home'?nationalTab:e.key==='End'?aoiTab:tab===nationalTab?aoiTab:nationalTab;switchMode(next===aoiTab?'aoi':'national');next.focus();});
+ addEventListener('message',e=>{if(embedded){if(e.source!==parent||![aoiOrigin,'http://127.0.0.1:8788'].includes(e.origin))return;if(e.data?.type==='abi-map-resume')requestAnimationFrame(()=>map.invalidateSize({pan:false}));}else if(e.source===aoiFrame.contentWindow&&e.origin===aoiOrigin&&e.data?.type==='abi-map-mode'&&e.data.mode==='national')switchMode('national');});
  const panel=document.getElementById('acreage'), stateSelect=document.getElementById('acreage-state'), countySelect=document.getElementById('acreage-county');
  const areaTitle=document.getElementById('acreage-area-title'), status=document.getElementById('acreage-status'),body=document.getElementById('acreage-rows');
  let data,viewCounts=null,viewId=0,timer,selectedCounts,selectedName='Contiguous U.S.',selectionId=0;
@@ -44,7 +64,7 @@
  }
  function selectArea(){
   const c=data.counties.find(c=>c.fips===countySelect.value),s=data.states.find(s=>s.fips===stateSelect.value);
-  selectedCounts=c?c.cells:s?s.cells:data.nationalCells;selectedName=c?c.name+(c.type==='County'?' County':c.type?' '+c.type:'')+', '+c.stateName:s?s.name:'Contiguous U.S.';render();fitSelected().catch(()=>{});
+  selectedCounts=c?c.cells:s?s.cells:data.nationalCells;selectedName=c?c.name+(c.type==='County'?' County':c.type?' '+c.type:'')+', '+c.stateName:s?s.name:'Contiguous U.S.';render();areaFit=fitSelected().catch(()=>{});
  }
  stateSelect.addEventListener('change',()=>{populateCounties();selectArea();});countySelect.addEventListener('change',selectArea);
  document.getElementById('acreage-export').addEventListener('click',()=>{
