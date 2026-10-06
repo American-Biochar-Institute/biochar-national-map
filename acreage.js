@@ -50,7 +50,7 @@
  async function fitSelected(){
   const selection=++selectionId;
   selectedCountyLayer.clearLayers();
-  if(!stateSelect.value){map.setView([39.5,-98.35],4);return;}
+  if(!stateSelect.value){map.setView([39.5,-98.35],4,{animate:false});return;}
   const county=countySelect.value,state=stateSelect.value;
   const gj=await fetch(county?'counties.geojson':'states.geojson').then(r=>r.json());
   const f=gj.features.find(f=>county?f.id===county:f.id.padStart(2,'0')===state);
@@ -60,7 +60,7 @@
    L.geoJSON(f,{...options,style:{color:'#ffffff',weight:7,opacity:1,fill:false,className:'selected-county-halo'}}).addTo(selectedCountyLayer);
    L.geoJSON(f,{...options,style:{color:'#45173d',weight:4,opacity:1,fill:false,className:'selected-county-outline'}}).addTo(selectedCountyLayer);
   }
-  map.fitBounds(L.geoJSON(f).getBounds(),{paddingTopLeft:[30,100],paddingBottomRight:[30,35],maxZoom:11});
+  map.fitBounds(L.geoJSON(f).getBounds(),{animate:false,paddingTopLeft:[30,100],paddingBottomRight:[30,35],maxZoom:11});
  }
  function selectArea(){
   const c=data.counties.find(c=>c.fips===countySelect.value),s=data.states.find(s=>s.fips===stateSelect.value);

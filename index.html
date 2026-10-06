@@ -75,7 +75,7 @@
     .leaflet-control-geocoder-form input{width:150px}
   }
 
- #acreage{bottom:22px;right:12px;width:365px;max-height:calc(100% - 110px);overflow:auto;padding:16px;background:rgba(255,255,255,.97)}
+ #acreage{top:12px;bottom:12px;right:12px;width:365px;max-height:calc(100% - 24px);overflow:auto;padding:16px;background:rgba(255,255,255,.97)}
  #acreage h2{font:700 18px/1.25 Georgia,serif;margin:0 0 13px;color:#184a2b}
  #acreage label{display:block;font-weight:600;margin-top:9px;font-size:12px}
  #acreage select{width:100%;padding:7px;font:inherit;border:1px solid #cbd5cc;border-radius:4px;background:#fff}
@@ -94,7 +94,7 @@
  .aoi-entry .aoi-link:focus-visible{outline:3px solid #45173d;outline-offset:3px}
  .aoi-entry .aoi-access{margin:8px 0 0;font-size:11px;color:#596359}
  #acreage .note{font-size:10.5px;line-height:1.4;color:#596359;margin:10px 0 0}
- @media(max-width:640px){header{flex-wrap:wrap;padding:10px 12px}.mode-tabs{width:100%}.mode-tabs button{flex:1}#map{right:0}#acreage{width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
+ @media(max-width:640px){header{flex-wrap:wrap;padding:10px 12px}.mode-tabs{width:100%}.mode-tabs button{flex:1}#map{right:0}#acreage{top:auto;width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
 </style>
 <script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded-map");</script><style>.embedded-map header{display:none}</style>
 </head>
@@ -349,6 +349,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
-<script src="acreage.js?v=20261006-tabs"></script>
+<script src="acreage.js?v=20261006-tabs2"></script>
 </body>
 </html>
