@@ -44,23 +44,28 @@
  }
  const colors=['#f7fcf5','#c7e9c0','#74c476','#238b45','#00441b','#deded8'];
  const order=[4,3,2,1,0,5];const format=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(n);
- const worker=new Worker('acreage-worker.js?v=20261006-50m');
+ const worker=new Worker('acreage-worker.js?v=20261006-native30m-final');
  let tileId=0;const pendingTiles=new Map();
  const ScenarioLayer=L.GridLayer.extend({createTile(coords,done){
   const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
   const id='tile:'+ ++tileId;pendingTiles.set(id,{canvas,done});worker.postMessage({id,scenario,coords:{x:coords.x,y:coords.y,z:coords.z}});return canvas;
  }});
- const exploratoryLayer=new ScenarioLayer({opacity:.82,maxZoom:15,maxNativeZoom:13,attribution:'ABI adjusted response score; USDA-NRCS soil data; 50 m grid'});
+ map.createPane('nationalSoilPane');map.getPane('nationalSoilPane').style.zIndex=250;map.getPane('nationalSoilPane').style.pointerEvents='none';
+ map.createPane('nationalImageryPane');map.getPane('nationalImageryPane').style.zIndex=210;map.getPane('nationalImageryPane').style.pointerEvents='none';
+ const nationalImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{pane:'nationalImageryPane',maxZoom:19,attribution:'Imagery &copy; Esri and its data providers'});
+ const exploratoryLayer=new ScenarioLayer({pane:'nationalSoilPane',opacity:1,maxZoom:15,maxNativeZoom:14,attribution:'Biochar response; USDA-NRCS soil data; native 30 m grid'});
+ const opacitySlider=document.getElementById('national-soil-opacity'),opacityValue=document.getElementById('national-opacity-value');
+ opacitySlider.addEventListener('input',()=>{const amount=Number(opacitySlider.value);opacityValue.textContent=amount+'%';opacitySlider.setAttribute('aria-valuetext',amount+'% soil colors');exploratoryLayer.setOpacity(amount/100);if(amount<100){if(!map.hasLayer(nationalImagery))nationalImagery.addTo(map);}else map.removeLayer(nationalImagery);});
  function updateRatingLabels(){
   const abi=scenario!=='nrcs';
   window.abiExploratoryActive=abi;
   document.getElementById('about-rating').textContent=abi?'Colors show the ABI adjusted response score using your drainage and pH choices. Darker green means greater modeled response potential. These scores are estimates, not measured soil improvements. Switch to Area of interest for live soil-polygon detail.':'Colors show the USDA-NRCS interpretation SOH - Dynamic Soil Properties Response to Biochar. Darker green means greater modeled response potential. Zoom in for county lines; switch to Area of interest for aerial imagery and soil-polygon detail.';
   document.getElementById('rating-title').textContent=abi?'ABI adjusted response score acres by response class':'NRCS acres by response class';
   document.getElementById('rating-note').textContent=abi?'ABI scenario estimates use the largest soil component in each map unit. Some missing factors are inferred or calibrated to the published rating. This is an exploratory model, not a measured benefit or an NRCS rating.':'NRCS ratings describe soils as mapped in their native condition. They do not predict crop yield or establish funding eligibility.';
-  document.getElementById('resolution-note').textContent=abi?'Adjusted-score colors and acreage use 50 m cells. Acreage includes all mapped land uses. Use Area of interest for mapped soil-boundary detail. Unrated or unavailable areas stay separate.':'Estimates use the 300 m class raster and cell centers. Rounded acres include all mapped land uses. Current view may cross state or county boundaries. Unrated area stays separate. Outside county boundaries is excluded.';
-  document.getElementById('resnote').textContent=abi?'The ABI adjusted response map uses 50 m cells. Use Area of interest for aerial imagery and mapped soil-boundary detail.':'This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute\'s area tool for field-level detail.';
+  document.getElementById('resolution-note').textContent='Both response maps and all acreage totals use native 30 m cells. Acreage includes all mapped land uses. Unrated or unavailable areas stay separate.';
+  document.getElementById('resnote').textContent='This map uses native 30 m soil cells. Use Area of interest for mapped soil-boundary detail.';
   document.getElementById('resnote').style.display=map.getZoom()>=12?'block':'none';
-  if(!nationalPanel.hidden)document.getElementById('mode-description').textContent=abi?'ABI adjusted response score — 50 m national map':'USDA-NRCS published rating, read as native soil condition';
+  if(!nationalPanel.hidden)document.getElementById('mode-description').textContent=abi?'ABI adjusted response score — 30 m national map':'USDA-NRCS published rating — native 30 m map';
  }
  async function updateScenario(broadcast=true){
   if(broadcast!==false)broadcastScenario();
@@ -72,11 +77,10 @@
   viewId++;viewCounts=null;
   try{
    const path=next==='nrcs'?'acreage-summary.json':'exploratory/'+next+'-summary.json';
-   if(!summaryCache.has(next))summaryCache.set(next,fetch(path+(next==='nrcs'?'':'?v=20261006-50m')).then(r=>{if(!r.ok)throw new Error('Scenario data unavailable');return r.json();}));
+   if(!summaryCache.has(next))summaryCache.set(next,fetch(path+'?v=20261006-native30m-final').then(r=>{if(!r.ok)throw new Error('Scenario data unavailable');return r.json();}));
    const nextData=await summaryCache.get(next);if(request!==scenarioRequest)return;
    data=nextData;scenario=next;
-   if(scenario==='nrcs'){map.removeLayer(exploratoryLayer);if(!map.hasLayer(nrcsLayer))nrcsLayer.addTo(map);}
-   else {map.removeLayer(nrcsLayer);if(!map.hasLayer(exploratoryLayer))exploratoryLayer.addTo(map);else exploratoryLayer.redraw();}
+   if(!map.hasLayer(exploratoryLayer))exploratoryLayer.addTo(map);else exploratoryLayer.redraw();
    const c=data.counties.find(c=>c.fips===countySelect.value),s=data.states.find(s=>s.fips===stateSelect.value);
    selectedCounts=c?c.cells:s?s.cells:data.nationalCells;updateRatingLabels();render();requestView();
    if(abi&&complete)scenarioStatus.textContent='ABI scenario: artificially drained '+drainageSelect.value+'; raise soil pH '+phSelect.value+'.';
@@ -133,9 +137,9 @@
   lines.push('','"'+data.method.replaceAll('"','""')+'"','Rating,'+(scenario==='nrcs'?'USDA-NRCS published':'ABI adjusted response score'),'Artificially drained,'+(scenario==='nrcs'?'Not applicable':drainageSelect.value),'Raise soil pH,'+(scenario==='nrcs'?'Not applicable':phSelect.value));
   const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'}));const a=document.createElement('a');a.href=url;a.download='biochar-acreage-'+scenario+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  });
- fetch('acreage-summary.json').then(r=>{if(!r.ok)throw new Error('Summary data unavailable');return r.json();}).then(j=>{
+ fetch('acreage-summary.json?v=20261006-native30m-final').then(r=>{if(!r.ok)throw new Error('Summary data unavailable');return r.json();}).then(j=>{
   data=j;for(const s of data.states.slice().sort((a,b)=>a.name.localeCompare(b.name)))stateSelect.add(new Option(s.name,s.fips));
-  summaryCache.set('nrcs',Promise.resolve(j));ratingSelect.disabled=false;stateSelect.disabled=false;selectedCounts=data.nationalCells;updateRatingLabels();render();requestView();if(pendingScenario){receiveScenario(pendingScenario);pendingScenario=null;}
+  summaryCache.set('nrcs',Promise.resolve(j));ratingSelect.disabled=false;stateSelect.disabled=false;selectedCounts=data.nationalCells;exploratoryLayer.addTo(map);updateRatingLabels();render();requestView();if(pendingScenario){receiveScenario(pendingScenario);pendingScenario=null;}
  }).catch(e=>{status.textContent=e.message;});
  L.DomEvent.disableClickPropagation(panel);L.DomEvent.disableScrollPropagation(panel);
 })();

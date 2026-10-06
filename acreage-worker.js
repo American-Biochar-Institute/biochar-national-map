@@ -1,10 +1,10 @@
-importScripts('proj4.js','sectioned-grid.js');
+importScripts('proj4.js','sectioned-grid.js?v=20261006-native30m-final');
 const ALBERS='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs';
 let loadedName,ready;
 async function load(name='nrcs'){
  const path=name==='nrcs'?'acreage-summary.json':'exploratory/'+name+'-summary.json';
- const metadata=await (await fetch(path+(name==='nrcs'?'':'?v=20261006-50m'))).json();
- if(metadata.grid.format==='sectioned-50m-v1')return {...metadata.grid};
+ const metadata=await (await fetch(path+'?v=20261006-native30m-final')).json();
+ if(['sectioned-50m-v1','sectioned-native-v1'].includes(metadata.grid.format))return {...metadata.grid};
  const response=await fetch(metadata.grid.path+(name==='nrcs'?'':'?v=20261006-adjusted-ids'));
  if(!response.ok)throw new Error('Acreage grid unavailable');
  const stream=response.body.pipeThrough(new DecompressionStream('gzip'));
@@ -83,7 +83,7 @@ function projectedPixels(coords){
 }
 self.onmessage=async event=>{const {id,bounds,scenario,coords}=event.data;try{
  const grid=await getGrid(scenario);
- if(coords){const pixels=grid.format==='sectioned-50m-v1'?await Grid50.tile(grid,coords,palette,projectedPixels,tilePixels):tilePixels(grid,coords);self.postMessage({id,pixels},[pixels.buffer]);}
- else self.postMessage({id,counts:grid.format==='sectioned-50m-v1'?await Grid50.count(grid,projectedRing(bounds)):countCells(grid,projectedRing(bounds))});
+ if(coords){const pixels=['sectioned-50m-v1','sectioned-native-v1'].includes(grid.format)?await Grid50.tile(grid,coords,palette,projectedPixels,tilePixels):tilePixels(grid,coords);self.postMessage({id,pixels},[pixels.buffer]);}
+ else self.postMessage({id,counts:['sectioned-50m-v1','sectioned-native-v1'].includes(grid.format)?await Grid50.count(grid,projectedRing(bounds)):countCells(grid,projectedRing(bounds))});
 }catch(e){self.postMessage({id,error:e.message});}};
 

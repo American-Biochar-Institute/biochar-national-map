@@ -3,12 +3,12 @@
   Biochar Soil Suitability Atlas - National overview (Mode 1)
   American Biochar Institute
 
-  Static Leaflet viewer for the precomputed national tile pyramid, published to
+  Static Leaflet viewer for native 30 m response grids, published to
   GitHub Pages by the build workflow. Embed in WordPress with an iframe.
 
   Overlays: zoom control (top-left), state outlines + abbreviation labels, and
-  county outlines that appear when you zoom in. State and county geometry load at
-  runtime from a CDN; the abbreviation labels are built in so they always render.
+  county outlines that appear when you zoom in. State and county geometry is bundled
+  with the viewer; water detail loads from USGS at closer zooms.
 -->
 <html lang="en">
 <head>
@@ -50,6 +50,10 @@
     background:none;color:var(--muted);font-size:19px;line-height:1;cursor:pointer;border-radius:4px}
   #about .close-x:hover{background:rgba(0,0,0,.07);color:var(--ink)}
 
+  .water-name{background:none;border:none;text-align:center;white-space:nowrap;pointer-events:none;
+    color:#0f5691;font:600 italic 11px/1.25 Arial,sans-serif;paint-order:stroke fill;
+    -webkit-text-stroke:3px #fff;text-shadow:0 0 1px #fff}
+  .water-status{display:none;font-size:10px;max-width:200px;color:#675e51;padding:3px 6px}
   /* state abbreviation labels */
   /* map labels: crisp white outline via text-stroke (paint-order keeps the fill on top) */
   .state-label,.county-label,.city-label{background:none;border:none;text-align:center;white-space:nowrap;
@@ -98,8 +102,10 @@
  @media(max-width:640px){header{flex-wrap:wrap;padding:10px 12px}.mode-tabs{width:100%}.mode-tabs button{flex:1}#map{right:0}#acreage{top:auto;width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
 
 .area-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.area-controls>div{min-width:0}.national-question{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}.national-question label{margin-top:0!important}.national-info{width:32px;height:32px;padding:5px;flex:none;border:0;background:transparent;color:#45173d;cursor:pointer}.national-info svg{display:block;width:22px;height:22px}.national-info:focus-visible{outline:2px solid #45173d}.national-help{font-size:12px;line-height:1.45;padding:9px;background:#f3f6ef;border:1px solid #cbd5c4;border-radius:4px}#scenario-status{font-size:11px;line-height:1.4;color:#506255}
+.national-opacity{margin:10px 0 18px}.national-opacity label{display:flex;justify-content:space-between;align-items:center}.national-opacity input[type=range]{width:100%;accent-color:#45173d}.national-opacity .note{margin:3px 0}
 </style>
-<script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded-map");</script><style>.embedded-map header{display:none}</style>
+<script>if(new URLSearchParams(location.search).get("embedded")==="1")document.documentElement.classList.add("embedded-map");</script><style>.embedded-map header{display:none}.national-opacity{margin:10px 0 18px}.national-opacity label{display:flex;justify-content:space-between;align-items:center}.national-opacity input[type=range]{width:100%;accent-color:#45173d}.national-opacity .note{margin:3px 0}
+</style>
 </head>
 <body>
 <div id="app">
@@ -107,7 +113,7 @@
    <div>
     <p class="eyebrow">American Biochar Institute</p>
     <h1>Soil response to biochar</h1>
-    <p id="mode-description">USDA-NRCS published rating, read as native soil condition</p>
+    <p id="mode-description">USDA-NRCS published rating — native 30 m map</p>
    </div>
    <nav class="mode-tabs" role="tablist" aria-label="Map modes"><button id="national-tab" type="button" role="tab" aria-selected="true" aria-controls="national-panel">National overview</button><button id="aoi-tab" type="button" role="tab" aria-selected="false" aria-controls="aoi-panel" tabindex="-1">Area of interest</button></nav>
   </header>
@@ -126,7 +132,7 @@
 
 <section id="acreage" class="panel" aria-label="Biochar response acreage">
  <h2 id="rating-title">NRCS acres by response class</h2>
- <label for="rating-mode">Rating shown</label><select id="rating-mode" disabled><option value="nrcs">USDA-NRCS published</option><option value="abi">ABI adjusted response score</option></select>
+ <div class="national-opacity"><label for="national-soil-opacity">Soil overlay opacity <output id="national-opacity-value">100%</output></label><input id="national-soil-opacity" type="range" min="0" max="100" value="100" aria-valuetext="100% soil colors"><p class="note">Move left to see aerial imagery.</p></div><label for="rating-mode">Rating shown</label><select id="rating-mode" disabled><option value="nrcs">USDA-NRCS published</option><option value="abi">ABI adjusted response score</option></select>
  <div id="national-assumptions" hidden><p>Response estimate adjusted for your drainage and soil pH goals.</p>
  <div class="national-question"><label for="national-drainage">Is the land artificially drained?</label><button class="national-info" type="button" aria-label="About artificial drainage" aria-controls="national-drainage-help" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg></button></div>
  <div id="national-drainage-help" class="national-help" hidden>NRCS describes artificial drainage as removing free water from wet soils using surface mounding, ditches, or subsurface tiles, substantially changing the water table for a land use. Choose Yes for functioning drainage. <a href="https://www.nrcs.usda.gov/sites/default/files/2022-06/Soil%20Taxonomy.pdf" target="_blank" rel="noopener noreferrer">NRCS Soil Taxonomy</a></div>
@@ -141,7 +147,7 @@
  <h3 id="acreage-area-title">Contiguous U.S.</h3>
  <table><thead><tr><th scope="col">Response</th><th scope="col">Whole area<br>acres</th><th scope="col">Current view<br>acres</th></tr></thead><tbody id="acreage-rows"></tbody></table>
  <p id="acreage-status" role="status">Loading acreage data…</p>
- <div id="resnote">This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute's area tool for field-level detail.</div>
+ <div id="resnote">This map uses native 30 m soil cells. Use Area of interest for mapped soil-boundary detail.</div>
  <div class="aoi-entry">
   <p id="aoi-description">Explore a field on aerial imagery using live SSURGO soil polygons and response ratings.</p>
   <button class="aoi-link" id="aoi-explorer-link" type="button" aria-describedby="aoi-access">Draw an area of interest</button>
@@ -149,7 +155,7 @@
  </div>
  <button id="acreage-export" type="button">Download acreage CSV</button>
  <p class="note">Darker green means greater expected response. Ratings: Excellent 0.751–1, Good 0.501–0.750, Fair 0.251–0.500, Low 0.001–0.250, Negligible 0.</p>
- <p id="resolution-note" class="note">Estimates use the 300 m class raster and cell centers. Rounded acres include all mapped land uses. Current view may cross state or county boundaries. Unrated area stays separate. Outside county boundaries is excluded.</p>
+ <p id="resolution-note" class="note">Both response maps and all acreage totals use native 30 m cells. Acreage includes all mapped land uses. Unrated or unavailable areas stay separate.</p>
  <p id="rating-note" class="note">NRCS ratings describe soils as mapped in their native condition. They do not predict crop yield or establish funding eligibility.</p>
 </section>
 
@@ -159,13 +165,9 @@
 <section id="aoi-panel" role="tabpanel" aria-labelledby="aoi-tab" hidden><p id="aoi-loading" class="mode-loading" role="status" hidden>Loading the aerial AOI map…</p><iframe id="aoi-frame" title="Draw an area of interest and explore soil response" allow="fullscreen"></iframe></section>
 </div></div>
 <script src="leaflet.js"></script>
+<script src="hydrology.js?v=20261006-native30m-final"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
 <script>
-  // ---- tile pyramid produced by the build workflow (XYZ scheme) ----
-  var TILE_URL = "tiles/{z}/{x}/{y}.png";
-  var TMS = false;
-  var NATIVE_MAX_ZOOM = 11;     // top zoom actually built; keep in sync with the workflow "zoom" input
-
   // zoomControl is on by default (the +/- buttons, top-left)
   var initialCenter=[39.5,-98.35],initialZoom=4,initialLocation=location.hash.match(/^#map=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+)$/);
   if(initialLocation&&+initialLocation[1]>=-85&&+initialLocation[1]<=85&&+initialLocation[2]>=-180&&+initialLocation[2]<=180){initialCenter=[+initialLocation[1],+initialLocation[2]];initialZoom=Math.max(3,Math.min(15,+initialLocation[3]));}
@@ -173,26 +175,6 @@
 
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
-  }).addTo(map);
-
-  // Recolor the existing class tiles, preserving their original spatial resolution.
-  var greenByRGB = {'232,229,222':[247,252,245],'255,194,97':[199,233,192],
-    '186,232,194':[116,196,118],'54,69,0':[35,139,69],'69,23,61':[0,68,27]};
-  var GreenClassLayer = L.TileLayer.extend({createTile:function(coords,done){
-    var tile=document.createElement('canvas');tile.width=tile.height=256;
-    var img=new Image();img.crossOrigin='anonymous';
-    img.onload=function(){try{var ctx=tile.getContext('2d');ctx.drawImage(img,0,0,256,256);
-      var frame=ctx.getImageData(0,0,256,256),a=frame.data;
-      for(var i=0;i<a.length;i+=4){if(!a[i+3])continue;var rgb=greenByRGB[a[i]+','+a[i+1]+','+a[i+2]];
-        if(rgb){a[i]=rgb[0];a[i+1]=rgb[1];a[i+2]=rgb[2];}}
-      ctx.putImageData(frame,0,0);done(null,tile);
-    }catch(error){done(error,tile);}};
-    img.onerror=function(){done(new Error('Class tile unavailable'),tile);};
-    img.src=this.getTileUrl(coords);return tile;
-  }});
-  var nrcsLayer = new GreenClassLayer(TILE_URL, {
-    tms: TMS, opacity: 0.82, maxNativeZoom: NATIVE_MAX_ZOOM, maxZoom: 15,
-    attribution: 'Rating: USDA-NRCS SSURGO, SOH - Dynamic Soil Properties Response to Biochar; mukey grid: UC Davis SoilWeb'
   }).addTo(map);
 
   // ---- county outlines (zoom 7+) and county names (zoom 8+, in view only) ----
@@ -248,20 +230,11 @@
     updateCountyLabels();
   }
 
-  // ---- water (lakes filled + rivers) and interstates ----
-  map.createPane("waterPane"); map.getPane("waterPane").style.zIndex = 370;  // lake fills
-  map.createPane("linePane");  map.getPane("linePane").style.zIndex = 385;   // river + interstate lines
-  var waterLayer = L.layerGroup().addTo(map);
-  fetch("https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_lakes.geojson")
-    .then(function(r){ return r.json(); })
-    .then(function(gj){ L.geoJSON(gj, { pane:"waterPane", interactive:false,
-      style:{ color:"#7aa7c7", weight:0.4, fillColor:"#c3d9ea", fillOpacity:0.7 } }).addTo(waterLayer); })
-    .catch(function(){});
-  fetch("https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_rivers_lake_centerlines.geojson")
-    .then(function(r){ return r.json(); })
-    .then(function(gj){ L.geoJSON(gj, { pane:"linePane", interactive:false,
-      style:{ color:"#5a86ad", weight:1, opacity:0.7 } }).addTo(waterLayer); })
-    .catch(function(){});
+  // Water shapes and names stay above the soil and aerial imagery.
+  map.createPane("linePane"); map.getPane("linePane").style.zIndex = 385;
+  var hydro = createNationalWaterLayers(map);
+  var waterLayer = hydro.water.addTo(map);
+  var majorRiversLayer = hydro.rivers.addTo(map);
   // interstates: lazy-load Natural Earth roads once zoomed in, keep the I-routes
   var interstateLayer = L.layerGroup().addTo(map);
   var interstatesLoaded = false;
@@ -346,9 +319,14 @@
   map.on("zoomend", onZoom); map.on("moveend", onMove); onZoom();
 
   // overlay toggles (top-right); counties appear automatically when zoomed in
-  L.control.layers(null,
-    { "State boundaries &amp; labels": statesLayer, "Rivers &amp; lakes": waterLayer, "Interstates": interstateLayer },
+  var overlayControl = L.control.layers(null,
+    { "State boundaries &amp; labels": statesLayer, "Major rivers": majorRiversLayer, "Lakes &amp; river channels": waterLayer, "Interstates": interstateLayer },
     { collapsed:false, position:"topright" }).addTo(map);
+  ["rivers", "water"].forEach(function(kind){
+    var status = document.createElement("div"); status.id = "water-status-" + kind;
+    status.className = "water-status"; status.setAttribute("role", "status");
+    overlayControl.getContainer().appendChild(status);
+  });
 
   // ---- address search: type an address, zoom to that spot ----
   var addrMarker = null;
@@ -363,6 +341,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
-<script src="acreage.js?v=20261006-50m"></script>
+<script src="acreage.js?v=20261006-native30m-final"></script>
 </body>
 </html>

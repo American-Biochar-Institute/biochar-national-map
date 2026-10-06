@@ -39,7 +39,7 @@
   return counts;
  }
  async function decompress(url){
-  const r=await fetch(url);if(!r.ok)throw new Error('50 m map section unavailable');
+  const r=await fetch(url);if(!r.ok)throw new Error('native-grid map section unavailable');
   return new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
  }
  const cache=new Map(),waiting=new Map();let active=0;const queue=[];
@@ -48,12 +48,12 @@
   const key=grid.assetBase+level+'/'+y+'-'+x+'.bin.gz';
   if(cache.has(key)){const v=cache.get(key);cache.delete(key);cache.set(key,v);return v;}
   if(waiting.has(key))return waiting.get(key);
-  const promise=scheduled(async()=>{const v=await decompress(key);if(v.length!==grid.chunkSize*grid.chunkSize/2)throw new Error('Incomplete 50 m map section');cache.set(key,v);while(cache.size>24)cache.delete(cache.keys().next().value);return v;});
+  const promise=scheduled(async()=>{const v=await decompress(key);if(v.length!==grid.chunkSize*grid.chunkSize/2)throw new Error('Incomplete native-grid map section');cache.set(key,v);while(cache.size>24)cache.delete(cache.keys().next().value);return v;});
   waiting.set(key,promise);try{return await promise;}finally{waiting.delete(key);}
  }
  async function histograms(grid){
   if(!grid.histograms)grid.histograms=decompress(grid.assetBase+'block-counts.bin.gz').then(v=>{
-   if(v.length!==grid.blockWidth*grid.blockHeight*12)throw new Error('Incomplete 50 m acreage index');return new Uint16Array(v.buffer,v.byteOffset,v.byteLength/2);
+   if(v.length!==grid.blockWidth*grid.blockHeight*12)throw new Error('Incomplete native-grid acreage index');return new Uint16Array(v.buffer,v.byteOffset,v.byteLength/2);
   });
   return grid.histograms;
  }
@@ -69,15 +69,15 @@
   return false;
  }
  async function tile(grid,coords,palette,projectedPixels,overviewTile){
-  const stride=coords.z<=7?16:coords.z<=9?4:1;
-  if(stride===16){
+  const stride=coords.z<=7?grid.overview.stride:coords.z<=9?grid.medium.stride:1;
+  if(stride===grid.overview.stride){
    if(!grid.overviewRaster)grid.overviewRaster=decompress(grid.assetBase+'overview.bin.gz').then(v=>{if(v.length!==Math.ceil(grid.overview.width*grid.overview.height/2))throw new Error('Incomplete overview');return v;});
-   return overviewTile({...grid,width:grid.overview.width,height:grid.overview.height,resolution:[800,-800],raster:await grid.overviewRaster},coords);
+   return overviewTile({...grid,width:grid.overview.width,height:grid.overview.height,resolution:[grid.resolution[0]*stride,grid.resolution[1]*stride],raster:await grid.overviewRaster},coords);
   }
   const pixels=new Uint8ClampedArray(256*256*4),points=projectedPixels(coords),groups=new Map(),size=grid.chunkSize;
   const width=stride===1?grid.width:grid.medium.width,height=stride===1?grid.height:grid.medium.height;
   for(let i=0;i<points.length/2;i++){
-   const px=points[i*2],py=points[i*2+1],col=Math.floor((px-grid.origin[0])/(50*stride)),row=Math.floor((py-grid.origin[1])/(-50*stride));
+   const px=points[i*2],py=points[i*2+1],col=Math.floor((px-grid.origin[0])/(grid.resolution[0]*stride)),row=Math.floor((py-grid.origin[1])/(grid.resolution[1]*stride));
    if(col<0||row<0||col>=width||row>=height)continue;
    const tx=Math.floor(col/size),ty=Math.floor(row/size);if(!available(grid,tx,ty,stride))continue;
    const key=ty+'-'+tx;if(!groups.has(key))groups.set(key,{x:tx,y:ty,pixels:[]});groups.get(key).pixels.push([i,(row%size)*size+col%size]);
