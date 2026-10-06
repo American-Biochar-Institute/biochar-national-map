@@ -1,4 +1,6 @@
 (function(){
+ const aoiLink=document.getElementById('aoi-explorer-link');
+ if(aoiLink)aoiLink.addEventListener('click',()=>{const center=map.getCenter();aoiLink.href='https://biochar-aoi-public.abi-verified-api.workers.dev/#map='+center.lat.toFixed(6)+','+center.lng.toFixed(6)+','+map.getZoom();});
  const panel=document.getElementById('acreage'), stateSelect=document.getElementById('acreage-state'), countySelect=document.getElementById('acreage-county');
  const areaTitle=document.getElementById('acreage-area-title'), status=document.getElementById('acreage-status'),body=document.getElementById('acreage-rows');
  let data,viewCounts=null,viewId=0,timer,selectedCounts,selectedName='Contiguous U.S.',selectionId=0;

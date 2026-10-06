@@ -87,6 +87,12 @@
  #acreage .acreage-total{font-weight:700} #acreage .acreage-total th{font-weight:700}
  #acreage-status{font-size:11px;color:#506255;margin:10px 0}
  #acreage-export{font:inherit;font-size:12px;padding:7px 10px;color:#164a2b;border:1px solid #9caf9f;background:#eff7ee;border-radius:4px;cursor:pointer}
+ .aoi-entry{margin:0 0 14px;padding:12px;background:#f3f6ef;border:1px solid #cbd5c4;border-radius:6px}
+ .aoi-entry p{margin:0 0 8px;font-size:12px;line-height:1.4;color:#474540}
+ .aoi-entry .aoi-link{display:block;padding:9px 12px;border-radius:4px;background:#364500;color:#fff;text-align:center;font-weight:600;text-decoration:none}
+ .aoi-entry .aoi-link:hover{background:#45173d}
+ .aoi-entry .aoi-link:focus-visible{outline:3px solid #45173d;outline-offset:3px}
+ .aoi-entry .aoi-access{margin:8px 0 0;font-size:11px;color:#596359}
  #acreage .note{font-size:10.5px;line-height:1.4;color:#596359;margin:10px 0 0}
  @media(max-width:640px){#map{margin-right:0}#acreage{width:290px;max-height:45%;padding:10px}#about{display:none}#acreage h2{font-size:16px}}
 </style>
@@ -113,6 +119,11 @@
 
 <section id="acreage" class="panel" aria-label="Biochar response acreage">
  <h2>Estimated acres by response class</h2>
+ <div class="aoi-entry">
+  <p id="aoi-description">Explore a field on aerial imagery using live SSURGO soil polygons and response ratings.</p>
+  <a class="aoi-link" id="aoi-explorer-link" href="https://biochar-aoi-public.abi-verified-api.workers.dev/" target="_blank" rel="noopener noreferrer" aria-describedby="aoi-access">Draw an area of interest &nearr;</a>
+  <p class="aoi-access" id="aoi-access">Opens the public aerial AOI tool in a new tab. No sign-in required.</p>
+ </div>
  <label for="acreage-state">State</label><select id="acreage-state" disabled><option value="">Contiguous U.S.</option></select>
  <label for="acreage-county">County or equivalent</label><select id="acreage-county" disabled><option value="">Select a state first</option></select>
  <h3 id="acreage-area-title">Contiguous U.S.</h3>
@@ -329,6 +340,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
-<script src="acreage.js?v=20261006-county-border"></script>
+<script src="acreage.js?v=20261006-aoi"></script>
 </body>
 </html>
