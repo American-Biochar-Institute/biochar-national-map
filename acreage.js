@@ -5,6 +5,10 @@
  const colors=['#f7fcf5','#c7e9c0','#74c476','#238b45','#00441b','#deded8'];
  const order=[4,3,2,1,0,5];const format=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(n);
  const worker=new Worker('acreage-worker.js');
+ map.createPane('selectedCountyPane');
+ map.getPane('selectedCountyPane').style.zIndex=450;
+ map.getPane('selectedCountyPane').style.pointerEvents='none';
+ const selectedCountyLayer=L.layerGroup().addTo(map);
  function render(){
   if(!data)return;areaTitle.textContent=selectedName;
   body.replaceChildren();
@@ -23,11 +27,18 @@
   for(const c of rows)countySelect.add(new Option(c.name+(c.type==='County'?' County':c.type?' '+c.type:''),c.fips));countySelect.disabled=!stateSelect.value;}
  async function fitSelected(){
   const selection=++selectionId;
+  selectedCountyLayer.clearLayers();
   if(!stateSelect.value){map.setView([39.5,-98.35],4);return;}
-  const county=countySelect.value;
+  const county=countySelect.value,state=stateSelect.value;
   const gj=await fetch(county?'counties.geojson':'states.geojson').then(r=>r.json());
-  const f=gj.features.find(f=>county?f.id===county:f.id.padStart(2,'0')===stateSelect.value);
-  if(f && selection===selectionId)map.fitBounds(L.geoJSON(f).getBounds(),{paddingTopLeft:[30,100],paddingBottomRight:[30,35],maxZoom:11});
+  const f=gj.features.find(f=>county?f.id===county:f.id.padStart(2,'0')===state);
+  if(!f || selection!==selectionId)return;
+  if(county){
+   const options={pane:'selectedCountyPane',interactive:false};
+   L.geoJSON(f,{...options,style:{color:'#ffffff',weight:7,opacity:1,fill:false,className:'selected-county-halo'}}).addTo(selectedCountyLayer);
+   L.geoJSON(f,{...options,style:{color:'#45173d',weight:4,opacity:1,fill:false,className:'selected-county-outline'}}).addTo(selectedCountyLayer);
+  }
+  map.fitBounds(L.geoJSON(f).getBounds(),{paddingTopLeft:[30,100],paddingBottomRight:[30,35],maxZoom:11});
  }
  function selectArea(){
   const c=data.counties.find(c=>c.fips===countySelect.value),s=data.states.find(s=>s.fips===stateSelect.value);
