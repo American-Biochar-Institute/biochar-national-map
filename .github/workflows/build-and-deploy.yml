@@ -73,7 +73,7 @@ jobs:
         run: |
           mkdir -p site
           cp index.html site/index.html
-          cp acreage.js acreage-worker.js acreage-summary.json acreage-grid.bin.gz proj4.js leaflet.js leaflet.css counties.geojson states.geojson site/
+          cp acreage.js acreage-worker.js sectioned-grid.js acreage-summary.json acreage-grid.bin.gz proj4.js leaflet.js leaflet.css counties.geojson states.geojson site/
           cp -R exploratory site/
 
       - name: Upload Pages artifact

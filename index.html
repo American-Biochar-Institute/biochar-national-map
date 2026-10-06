@@ -340,7 +340,7 @@
     updateCounties();
     updateCityLabels();
     if (map.getZoom() >= 5) loadInterstates();
-    document.getElementById("resnote").style.display = (map.getZoom() >= (window.abiExploratoryActive?9:12)) ? "block" : "none";
+    document.getElementById("resnote").style.display = (map.getZoom() >= 12) ? "block" : "none";
   }
   function onMove(){ updateCountyLabels(); updateCityLabels(); }
   map.on("zoomend", onZoom); map.on("moveend", onMove); onZoom();
@@ -363,6 +363,6 @@
     if (g.bbox) map.fitBounds(g.bbox, { maxZoom: 12 }); else map.setView(g.center, 12);
   }).addTo(map);
 </script>
-<script src="acreage.js?v=20261006-adjusted-ids"></script>
+<script src="acreage.js?v=20261006-50m"></script>
 </body>
 </html>

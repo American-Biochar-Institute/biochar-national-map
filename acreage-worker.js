@@ -1,9 +1,10 @@
-importScripts('proj4.js');
+importScripts('proj4.js','sectioned-grid.js');
 const ALBERS='+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs';
 let loadedName,ready;
 async function load(name='nrcs'){
  const path=name==='nrcs'?'acreage-summary.json':'exploratory/'+name+'-summary.json';
- const metadata=await (await fetch(path+(name==='nrcs'?'':'?v=20261006-adjusted-ids'))).json();
+ const metadata=await (await fetch(path+(name==='nrcs'?'':'?v=20261006-50m'))).json();
+ if(metadata.grid.format==='sectioned-50m-v1')return {...metadata.grid};
  const response=await fetch(metadata.grid.path+(name==='nrcs'?'':'?v=20261006-adjusted-ids'));
  if(!response.ok)throw new Error('Acreage grid unavailable');
  const stream=response.body.pipeThrough(new DecompressionStream('gzip'));
@@ -70,9 +71,19 @@ function tilePixels(grid,coords){
  }
  return pixels;
 }
+function projectedPixels(coords){
+ const points=new Float64Array(256*256*2),scale=256*2**coords.z;
+ const sins=[],coss=[],rhos=[];
+ for(let i=0;i<256;i++){
+  const lon=(coords.x*256+i+.5)/scale*360-180,theta=n*(lon+96)*rad;sins[i]=Math.sin(theta);coss[i]=Math.cos(theta);
+  const lat=Math.atan(Math.sinh(Math.PI*(1-2*(coords.y*256+i+.5)/scale)));rhos[i]=a*Math.sqrt(C-n*q(lat))/n;
+ }
+ for(let y=0;y<256;y++)for(let x=0;x<256;x++){const i=(y*256+x)*2;points[i]=rhos[y]*sins[x];points[i+1]=rho0-rhos[y]*coss[x];}
+ return points;
+}
 self.onmessage=async event=>{const {id,bounds,scenario,coords}=event.data;try{
  const grid=await getGrid(scenario);
- if(coords){const pixels=tilePixels(grid,coords);self.postMessage({id,pixels},[pixels.buffer]);}
- else self.postMessage({id,counts:countCells(grid,projectedRing(bounds))});
+ if(coords){const pixels=grid.format==='sectioned-50m-v1'?await Grid50.tile(grid,coords,palette,projectedPixels,tilePixels):tilePixels(grid,coords);self.postMessage({id,pixels},[pixels.buffer]);}
+ else self.postMessage({id,counts:grid.format==='sectioned-50m-v1'?await Grid50.count(grid,projectedRing(bounds)):countCells(grid,projectedRing(bounds))});
 }catch(e){self.postMessage({id,error:e.message});}};
 
