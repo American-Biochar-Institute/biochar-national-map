@@ -76,6 +76,7 @@
   }
 
  #acreage{top:12px;bottom:12px;right:12px;width:365px;max-height:calc(100% - 24px);overflow:auto;padding:16px;background:rgba(255,255,255,.97)}
+ #acreage #resnote{position:static;transform:none;max-width:none;margin:10px 0;box-shadow:none;font-size:11px}
  #acreage h2{font:700 18px/1.25 Georgia,serif;margin:0 0 13px;color:#184a2b}
  #acreage label{display:block;font-weight:600;margin-top:9px;font-size:12px}
  #acreage select{width:100%;padding:7px;font:inherit;border:1px solid #cbd5cc;border-radius:4px;background:#fff}
@@ -140,6 +141,7 @@
  <h3 id="acreage-area-title">Contiguous U.S.</h3>
  <table><thead><tr><th scope="col">Response</th><th scope="col">Whole area<br>acres</th><th scope="col">Current view<br>acres</th></tr></thead><tbody id="acreage-rows"></tbody></table>
  <p id="acreage-status" role="status">Loading acreage data…</p>
+ <div id="resnote">This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute's area tool for field-level detail.</div>
  <div class="aoi-entry">
   <p id="aoi-description">Explore a field on aerial imagery using live SSURGO soil polygons and response ratings.</p>
   <button class="aoi-link" id="aoi-explorer-link" type="button" aria-describedby="aoi-access">Draw an area of interest</button>
@@ -151,7 +153,7 @@
  <p id="rating-note" class="note">NRCS ratings describe soils as mapped in their native condition. They do not predict crop yield or establish funding eligibility.</p>
 </section>
 
-<div id="resnote">This national overview is built at about 50 m resolution (roughly zoom 11). Beyond that the coloring is upscaled and is not intended for site-specific decisions; use the Institute's area tool for field-level detail.</div>
+
 
 </section>
 <section id="aoi-panel" role="tabpanel" aria-labelledby="aoi-tab" hidden><p id="aoi-loading" class="mode-loading" role="status" hidden>Loading the aerial AOI map…</p><iframe id="aoi-frame" title="Draw an area of interest and explore soil response" allow="fullscreen"></iframe></section>
