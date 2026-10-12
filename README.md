@@ -1,104 +1,39 @@
-# Biochar Soil Suitability Atlas - National Map (Mode 1)
+# Soil response to biochar: national map
 
-American Biochar Institute
+American Biochar Institute (the Institute). Live map: https://american-biochar-institute.github.io/biochar-national-map/
 
-This repository builds a UC Davis SoilWeb style national map of the USDA-NRCS
-interpretation **SOH - Dynamic Soil Properties Response to Biochar** and publishes
-it to the web. The whole thing runs in GitHub's cloud. Nothing runs on your
-machine, and there is no gSSURGO download to manage.
+A public map of the USDA-NRCS soil interpretation **SOH - Dynamic Soil Properties Response to Biochar** for the lower 48 states, at native 30 m resolution. Visitors see the NRCS rating, can build the Institute's adjusted score from a few choices, and can look up the soils in their own fields. The companion **Biochar Response Rating Explorer** (`explorer.html`) explains the evidence behind each factor.
 
-## How it works
+## What the map does
 
-- A GitHub Actions workflow fetches the national gSSURGO map-unit-key grid at
-  browse resolution from the UC Davis SoilWeb Web Coverage Service.
-- It reclasses each map unit key to a biochar response class using the
-  NRCS-published rating in `data/biochar_national_lookup.csv`.
-- It colors the five classes, reprojects to Web Mercator, and cuts a static tile
-  pyramid.
-- It publishes the viewer plus the tiles to GitHub Pages. You embed that page in
-  a WordPress page on biochar.org with an iframe.
+- **Starts with the NRCS rating.** With the default choices, every soil shows its published NRCS rating.
+- **Adjusted score (optional).** Three controls change it: whether the land is artificially drained, whether the biochar has a meaningful liming value, and whether to leave out factors research does not link to biochar response (slope, flooding, cobbles and stones, shrink-swell; all together or one at a time). The rules are in `policy.js` (version 2, October 2026). Adjusted scores are the Institute's estimates, not NRCS ratings.
+- **Acreage** for the nation, any state or county, and the current view.
+- **Your fields.** Draw fields or upload boundaries (.zip shapefile, GeoJSON, KML or KMZ). Soils come from USDA Soil Data Access through the Institute's lookup service; boundaries are not saved by the Institute. Each field shows acres by response class, the soils, what biochar might improve, and an optional soil test pH.
 
-Nothing here recomputes the NRCS rating. It rasterizes what NRCS published, which
-is the whole point of the Mode 1 design. The step that used to hang, rasterizing
-36.7 million soil polygons, is gone: the national mukey grid already exists as a
-public service, so that step is now a download.
+## How it is built
 
-## What is in the repo
+| Part | Where | What it serves |
+|---|---|---|
+| This site (GitHub Pages) | this repository | The page and its scripts, `policy.js`, summaries, boundaries, bundled water and Interstate layers, `explorer.html`. |
+| Data worker | Cloudflare Worker `biochar-national-data` | The 30 m NRCS class grid (`20261006-native30m/`) and the 30 m map-unit index grid with its per-map-unit table (`20261010-index30m/`). |
+| Lookup worker | Cloudflare Worker `biochar-aoi-public` | `POST /api/aoi`: looks up the soils in one field polygon from USDA Soil Data Access. Accepts requests from this site and biochar.org; about 30 lookups a minute per visitor and about 240 a minute per Cloudflare location. |
 
-- `.github/workflows/build-and-deploy.yml` - the cloud build and publish
-- `build/build_biochar_tiles.py` - fetch the grid, reclass, color, reproject, tile
-- `build/reclass_mukey_to_rating.py` - the verified ABI reclass script (unchanged)
-- `build/biochar_class_colors.txt` - the five-class color table
-- `viewer/index.html` - the ABI-branded Leaflet viewer
-- `data/biochar_national_lookup.csv` - you add this (see `data/README.md`)
-- `WORDPRESS_EMBED.md` - how to place the map on biochar.org
+- The default view draws the published NRCS class layer. Any other choice scores all 323,322 map units in the browser (`index-grid.js`, `acreage-worker.js`) and recolors the map from the index grid.
+- National, state and county acres are exact counts of 30 m cells. Field acres come from the soil boundaries clipped to the field.
+- Base map and place names: Esri Light Gray Canvas. Water: Natural Earth. Interstates: Natural Earth 10m roads. Aerial imagery: Esri.
 
-## One-time setup
+## Publishing
 
-1. Create a free GitHub account if you do not have one. All steps below happen in
-   the browser.
-2. Create a new repository, for example `biochar-national-map`, and upload the
-   contents of this folder. Keep the folder layout.
-3. Add the lookup file: drop `biochar_national_lookup.csv` into the `data/`
-   folder (see `data/README.md`).
-4. Turn on Pages: repository **Settings -> Pages -> Build and deployment ->
-   Source = GitHub Actions**.
-5. Run the build: **Actions** tab -> **Build and deploy biochar national map** ->
-   **Run workflow**. For the first run, set resolution to `1000` to get a quick
-   national map in a few minutes and confirm the pipeline works end to end. Then
-   run it again at `300` for the detailed browse layer.
-6. When the run finishes, open the Pages URL it reports, something like
-   `https://<your-account>.github.io/biochar-national-map/`. That is your live map.
-7. Embed it on biochar.org (see `WORDPRESS_EMBED.md`).
-
-## Resolution and zoom
-
-- `resolution` is the grid cell size in meters. Lower is more detailed and takes
-  longer to build. `1000` is a fast national test. `300` is a good browse layer
-  and the default. Going below about `200` mostly grows build time and tile count
-  without helping a national overview.
-- `zoom` is the tile pyramid range. `3-9` covers national down to county-ish
-  browsing. The viewer lets users zoom in past the built levels by upscaling, so
-  there is no need to build deep zooms for an overview map.
-
-## Yearly refresh
-
-SSURGO refreshes on October 1, and the SoilWeb grid syncs by early November. The
-workflow is scheduled to rebuild automatically in mid-November. Before that run,
-replace `data/biochar_national_lookup.csv` with a lookup regenerated from the new
-gSSURGO so the rating and the grid share the same vintage. You can also rebuild
-any time from the Actions tab.
+The workflow `.github/workflows/build-and-deploy.yml` copies the site files listed in it into the Pages artifact and deploys it (Actions tab, **Build and deploy biochar national map**, Run workflow). The three parts must be deployed together when the scoring changes, because the page, the data worker's table and `policy.js` must agree. The build scripts and validation tests live in the Institute's working folder, not in this repository.
 
 ## Accuracy notes
 
-- **Quarter-cut classes.** The rating classes use quarter cuts, verified against
-  national data: 0 Negligible, 0.001 to 0.250 Low, 0.251 to 0.500 Fair, 0.501 to
-  0.750 Good, 0.751 to 1.0 Excellent. The color table and viewer legend both use
-  these breaks.
-- **gSSURGO, not gNATSGO.** The build uses the gSSURGO mukey grid so its keys
-  match the gSSURGO-keyed lookup. gNATSGO fills gaps with STATSGO and RSS keys
-  that would not join, so gaps are left unshaded rather than filled with a
-  different data source.
-- **Dominant component.** The lookup rolls each map unit up by dominant component,
-  which matches Web Soil Survey on the large majority of units. For an exact
-  dominant-condition match, regenerate the lookup by dominant condition; nothing
-  else in the pipeline changes.
-- **Native condition.** The rating describes the soil as mapped, in its native
-  condition. Water table, ponding, and flooding reflect undrained hydrology, so
-  some soils that rate low may respond well once drained. The viewer states this.
-
-## A note on the one live dependency
-
-The build fetches the mukey grid from the SoilWeb Web Coverage Service at run
-time. The request shape was taken from the soilDB R client and confirmed against
-the service capabilities, and the rest of the pipeline is verified. If SoilWeb is
-ever down or changes its service, the fetch step is the place to look. As a
-fallback, the same national mukey grid is downloadable from the USDA Geospatial
-Data Gateway and can be swapped in without touching the reclass, color, or tile
-steps.
+- Ratings use the dominant soil component of each map unit. Web Soil Survey uses dominant condition; the two differ on some map units.
+- 142 rated map units (about 551,600 acres) have no adjusted score because the Institute's engine cannot reproduce their NRCS rating. They keep their NRCS rating with the default choices and are shown separately otherwise.
+- Classes: 0 Negligible, 0.001 to 0.250 Low, 0.251 to 0.500 Fair, 0.501 to 0.750 Good, 0.751 to 1 Excellent.
+- Adjusted scores do not predict crop yield or establish program eligibility.
 
 ## Source
 
-USDA-NRCS SSURGO, interpretation SOH - Dynamic Soil Properties Response to
-Biochar. National map-unit-key grid via the UC Davis California Soil Resource Lab
-SoilWeb Web Coverage Service. Prepared by the American Biochar Institute.
+USDA-NRCS SSURGO and Soil Data Access (FY2026), interpretation SOH - Dynamic Soil Properties Response to Biochar. Prepared by the American Biochar Institute, Portland, Oregon. biochar.org

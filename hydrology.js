@@ -1,6 +1,10 @@
-/* National overview: Natural Earth. Close-up waterways: USGS National Hydrography Dataset. */
+/* Rivers and lakes: Natural Earth, bundled with the site, at every zoom.
+ * Close-up USGS National Hydrography detail (through the data worker's /hydro/ relay) is switched off
+ * (October 11, 2026): the USGS service timed out or returned 502/504 for most views, which left
+ * failed requests and console errors. Set USGS_DETAIL = true to bring it back. */
 (function () {
   'use strict';
+  var USGS_DETAIL = false;
   var service = 'https://biochar-national-data.abi-verified-api.workers.dev/hydro/';
   var cache = new Map(), overview = {}, pendingOverview = {};
   function loadOverview(kind) {
@@ -45,7 +49,7 @@
     initialize: function (kind) { this.kind = kind; this._group = L.layerGroup(); this._refresh = this._refresh.bind(this); this._generation = 0; },
     onAdd: function (map) { this._map = map; this._group.addTo(map); map.on('moveend', this._refresh); this._refresh(); },
     onRemove: function (map) { map.off('moveend', this._refresh); map.removeLayer(this._group); this._generation++; clearTimeout(this._timer); clearTimeout(this._retryTimer); if (this._abort) this._abort.abort(); this._map = null; this._status(''); },
-    getAttribution: function () { return 'Water: <a href="https://www.naturalearthdata.com/">Natural Earth</a>' + (this.kind === 'rivers' ? ', <a href="https://www.usgs.gov/national-hydrography">USGS</a>' : ''); },
+    getAttribution: function () { return 'Water: <a href="https://www.naturalearthdata.com/">Natural Earth</a>' + (this.kind === 'rivers' && USGS_DETAIL ? ', <a href="https://www.usgs.gov/national-hydrography">USGS</a>' : ''); },
     _status: function (text) { var el = document.getElementById('water-status-' + this.kind); if (el) { el.textContent = text; el.style.display = text ? 'block' : 'none'; } },
     _paint: function (collections, detailed) {
       if (!this._map) return;
@@ -62,7 +66,8 @@
       }
       var candidates = new Map(), occupied = [], shown = 0;
       features.forEach(function (f) { var nm = name(f); if (!nm) return; var points = labelPoints(f, bounds); if (!points.length) return; var old = candidates.get(nm); if (!old || points.length > old.length) candidates.set(nm, points); });
-      if (zoom < (kind === 'rivers' ? 5 : 6)) return;
+      // No water names at the national view (October 11, 2026): names start at zoom 8.
+      if (zoom < 8) return;
       candidates.forEach(function (points, nm) {
         if (shown >= 30) return; var p = points[Math.floor(points.length / 2)], screen = map.latLngToContainerPoint([p[1], p[0]]);
         if (occupied.some(function (q) { return Math.abs(q.x - screen.x) < 135 && Math.abs(q.y - screen.y) < 25; })) return;
@@ -79,7 +84,7 @@
           if (self._detail && self._detailBounds.contains(map.getBounds())) self._paint(self._detail, true); else self._paint([gj], false);
         } catch (e) { self._status('Water overview unavailable.'); }
         if (generation !== self._generation || !self._map) return;
-        if (self.kind === 'water') { self._status(''); return; }
+        if (self.kind === 'water' || !USGS_DETAIL) { self._status(''); return; }
         if (zoom < (self.kind === 'rivers' ? 8 : 10)) { self._status(''); return; }
         self._abort = new AbortController(); var abort = self._abort; var timeout = setTimeout(function () { abort.abort(); }, 30000);
         self._status('Loading water detail…');

@@ -24,13 +24,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Add the viewer to the site root
+      - name: Add the site files to the site root
         run: |
-          mkdir -p site
-          cp index.html site/index.html
-          cp acreage.js acreage-worker.js sectioned-grid.js hydrology.js hydro-major-rivers.geojson hydro-lakes.geojson acreage-summary.json proj4.js leaflet.js leaflet.css counties.geojson states.geojson site/
-          mkdir -p site/exploratory
-          cp exploratory/*-summary.json site/exploratory/
+          mkdir -p site/draw-images
+          cp index.html explorer.html site/
+          cp acreage.js acreage-worker.js sectioned-grid.js index-grid.js index-grid.json policy.js site/
+          cp fields.js uploads.js biochar_engine.js insights.js turf.min.js site/
+          cp hydrology.js hydro-major-rivers.geojson hydro-lakes.geojson interstates.geojson site/
+          cp acreage-summary.json counties.geojson states.geojson site/
+          cp proj4.js leaflet.js leaflet.css leaflet.draw.js leaflet.draw.css site/
+          cp draw-images/* site/draw-images/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
