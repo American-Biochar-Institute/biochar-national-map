@@ -42,11 +42,11 @@
  function leaveFieldModeIfEmpty(){if(!fields.length&&toolbar.hidden)setFieldMode(false);}
  showAcreage.addEventListener('click',()=>{const open=acreageSection.hidden;acreageSection.hidden=!open;showAcreage.setAttribute('aria-expanded',String(open));showAcreage.textContent=open?'Hide state and county acreage':'Show state and county acreage';});
  $('select-fields').disabled=false;
- $('select-fields').addEventListener('click',()=>{M.setOpacity(0);toolbar.hidden=false;setFieldMode(true);$('fields-title').scrollIntoView({block:'start'});setHint('Draw a field, or upload field boundaries. Add as many fields as you need.');$('draw-field').focus();});
+ $('select-fields').addEventListener('click',()=>{M.setOpacity(0);toolbar.hidden=false;setFieldMode(true);$('fields-title').scrollIntoView({block:'start'});setHint('Find a place by address, then draw a field or upload field boundaries. Add as many fields as you need.');if(window.abiAddressSearch)window.abiAddressSearch.focus();else $('draw-field').focus();});
  $('draw-field').addEventListener('click',()=>draw('polygon'));
  $('draw-rect').addEventListener('click',()=>draw('rectangle'));
  $('upload-fields').addEventListener('click',()=>fileInput.click());
- $('fields-done').addEventListener('click',()=>{stopDrawing();toolbar.hidden=true;leaveFieldModeIfEmpty();$('select-fields').focus();});
+ $('fields-done').addEventListener('click',()=>{stopDrawing();if(window.abiAddressSearch)window.abiAddressSearch.reset();toolbar.hidden=true;leaveFieldModeIfEmpty();$('select-fields').focus();});
  map.on('draw:drawstop',()=>{for(const id of ['draw-field','draw-rect'])$(id).setAttribute('aria-pressed','false');drawer=null;});
  map.on('draw:created',e=>{stopDrawing();const f=addField(e.layer.toGeoJSON().geometry,null);setHint(f.name+' added. Draw another field, upload boundaries, or press Done.');});
 

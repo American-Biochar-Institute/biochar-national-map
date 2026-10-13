@@ -70,25 +70,24 @@
     max-width:430px;background:rgba(251,241,221,.97);border:1px solid #ecdcbd;border-radius:8px;
     box-shadow:0 1px 6px rgba(0,0,0,.18);color:#6e4710;font-size:11.5px;line-height:1.4;padding:7px 12px;text-align:center}
 
-  /* address search box (top-left, under the zoom control), with suggestions as you type */
-  .addr-search{position:relative;background:#fff;border-radius:8px;box-shadow:0 1px 6px rgba(0,0,0,.18);font-size:13px}
-  .addr-search form{display:flex;align-items:center;margin:0}
+  /* address search: the top row of the field toolbar ("Select fields on the map"), with suggestions as you type */
+  .addr-search{position:relative;flex-basis:100%;display:flex;background:#fff;border:1px solid #9caf9f;border-radius:4px;font-size:13px}
+  .addr-search form{display:flex;align-items:center;flex:1;min-width:0;margin:0}
   .addr-search form svg{flex:none;margin:0 0 0 9px;color:#45403a}
-  .addr-search input{width:250px;border:0;background:transparent;padding:8px 6px;font:inherit;font-size:13px;color:var(--ink);outline:none}
+  .addr-search input{flex:1;min-width:0;border:0;background:transparent;padding:7px 6px;font:inherit;font-size:13px;color:var(--ink);outline:none}
   .addr-search input::-webkit-search-cancel-button{display:none}
-  .addr-search:focus-within{box-shadow:0 0 0 2px #1a73e8,0 1px 6px rgba(0,0,0,.18)}
-  .addr-clear{border:0;background:none;color:#6f6a61;font-size:19px;line-height:1;padding:4px 9px;cursor:pointer}
-  .addr-clear:focus-visible{outline:2px solid #1a73e8;border-radius:4px}
-  .addr-list{position:absolute;left:0;right:0;top:calc(100% + 4px);margin:0;padding:4px 0;list-style:none;background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.22);max-height:264px;overflow:auto;z-index:1001}
+  .addr-search:focus-within{box-shadow:0 0 0 2px #45173d}
+  #field-toolbar .addr-clear{border:0;background:none;color:#6f6a61;font-size:19px;font-weight:400;line-height:1;padding:3px 9px;cursor:pointer}
+  #field-toolbar .addr-clear:focus-visible{outline:2px solid #45173d;outline-offset:-2px;border-radius:4px}
+  .addr-list{position:absolute;left:-1px;right:-1px;top:calc(100% + 4px);margin:0;padding:4px 0;list-style:none;background:#fff;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.25);max-height:264px;overflow:auto;z-index:1001;text-align:left}
   .addr-list li{padding:7px 12px;cursor:pointer;line-height:1.35;color:var(--ink)}
-  .addr-list li[aria-selected=true],.addr-list li[id]:hover{background:#e8f0fe}
+  .addr-list li[aria-selected=true],.addr-list li[id]:hover{background:#efe7ee}
   .addr-list li.addr-note{cursor:default;color:#6f6a61}
   .addr-pin{background:none;border:0}
 
   @media (max-width:640px){
     #about{max-width:200px}
     #legend{max-width:180px}
-    .addr-search input{width:150px}
   }
 
  #map-updating{position:absolute;z-index:1100;bottom:48px;left:calc((100% - 390px)/2);transform:translateX(-50%);padding:6px 14px;border-radius:16px;background:#184a2b;color:#fff;font-size:13px;font-weight:600;box-shadow:0 1px 6px rgba(0,0,0,.25)}
@@ -138,7 +137,7 @@
  #acreage #resnote{position:static;transform:none;max-width:none;margin:10px 0;box-shadow:none;font-size:11px}
  .national-opacity{margin:14px 0 4px}.national-opacity label{display:flex;justify-content:space-between;align-items:center}.national-opacity input[type=range]{width:100%;accent-color:#45173d}.national-opacity .note{margin:3px 0}
  /* field tool */
- #field-toolbar{top:10px;left:calc((100% - 390px)/2);transform:translateX(-50%);padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:min(560px,calc(100% - 420px));background:rgba(255,255,255,.97)}
+ #field-toolbar{top:10px;left:calc((100% - 390px)/2);transform:translateX(-50%);padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:min(440px,calc(100% - 420px));background:rgba(255,255,255,.97)}
  #field-toolbar button{font:inherit;font-weight:600;padding:6px 10px;border:1px solid #9caf9f;border-radius:4px;background:#fff;color:#184a2b;cursor:pointer}
  #field-toolbar button[aria-pressed=true]{background:#45173d;border-color:#45173d;color:#fff}
  #field-toolbar #fields-done{background:#364500;border-color:#364500;color:#fff}
@@ -168,7 +167,7 @@
  .insight-card{padding:6px 0;border-bottom:1px solid #e1e8e1}.insight-card h5{margin:0}.insight-card p{margin:2px 0}
  .no-score th{font-style:italic}
  .field-ph{margin-top:6px}.field-ph label{font-size:12px;font-weight:600}.field-ph input{width:70px;margin-left:6px;font:inherit;padding:3px 5px;border:1px solid #cbd5cc;border-radius:4px}.field-ph .hint{margin-top:2px}
- @media(max-width:640px){#field-toolbar{left:50%;max-width:calc(100% - 24px)}#map-updating{left:50%}header{padding:8px 12px}#mode-description{display:none}#map{right:0;bottom:46%}#acreage{top:auto;left:0;right:0;bottom:0;width:auto;max-height:46%;border-radius:10px 10px 0 0;padding:10px 14px}#about{display:none}}
+ @media(max-width:640px){#field-toolbar{left:12px;right:12px;transform:none;max-width:none}#map-updating{left:50%}header{padding:8px 12px}#mode-description{display:none}#map{right:0;bottom:46%}#acreage{top:auto;left:0;right:0;bottom:0;width:auto;max-height:46%;border-radius:10px 10px 0 0;padding:10px 14px}#about{display:none}}
 </style>
 </head>
 <body>
@@ -184,7 +183,7 @@
  <div id="map"></div>
 <div id="map-updating" role="status" hidden>Updating map…</div>
 <div id="field-toolbar" class="panel" role="toolbar" aria-label="Field tools" hidden>
- <button id="draw-field" type="button" aria-pressed="false">Draw field</button><button id="draw-rect" type="button" aria-pressed="false">Draw rectangle</button><button id="upload-fields" type="button">Upload boundaries</button><button id="fields-done" type="button">Done</button>
+ <button id="draw-field" type="button" aria-pressed="false">Draw polygon</button><button id="draw-rect" type="button" aria-pressed="false">Draw rectangle</button><button id="upload-fields" type="button">Upload boundaries</button><button id="fields-done" type="button">Done</button>
  <p id="field-toolbar-hint" role="status"></p>
  <input id="field-file" type="file" accept=".zip,.kmz,.kml,.geojson,.json" multiple hidden>
 </div>
@@ -432,15 +431,14 @@
   var addrMarker = null, GEOCODE = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/", ADDRESS_ZOOM = 17;
   var pinIcon = L.divIcon({ className: "addr-pin", iconSize: [28, 40], iconAnchor: [14, 39],
     html: '<svg width="28" height="40" viewBox="0 0 28 40" aria-hidden="true"><path d="M14 1.5C7.1 1.5 1.5 7 1.5 13.8 1.5 23.2 14 38.5 14 38.5s12.5-15.3 12.5-24.7C26.5 7 20.9 1.5 14 1.5z" fill="#1a73e8" stroke="#fff" stroke-width="2"/><circle cx="14" cy="14" r="4.8" fill="#fff"/></svg>' });
-  var AddressSearch = L.Control.extend({ options: { position: "topleft" }, onAdd: function(){
-    var box = L.DomUtil.create("div", "addr-search leaflet-control");
-    box.innerHTML = '<form role="search" autocomplete="off"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>' +
-      '<input type="search" placeholder="Enter an address or place" aria-label="Search for an address or place" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="addr-list" spellcheck="false">' +
-      '<button type="button" class="addr-clear" aria-label="Clear the search" hidden>&times;</button></form><ul class="addr-list" id="addr-list" role="listbox" aria-label="Suggested places" hidden></ul>';
-    L.DomEvent.disableClickPropagation(box); L.DomEvent.disableScrollPropagation(box);
-    setupAddressSearch(box); return box;
-  } });
-  new AddressSearch().addTo(map);
+  // The search lives in the field toolbar, so it is only offered once "Select fields on the map" has
+  // faded the soil colors to 0% and switched to aerial imagery (October 13, 2026).
+  var addrBox = document.createElement("div"); addrBox.className = "addr-search";
+  addrBox.innerHTML = '<form role="search" autocomplete="off"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>' +
+    '<input type="search" placeholder="Enter an address or place" aria-label="Search for an address or place" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="addr-list" spellcheck="false">' +
+    '<button type="button" class="addr-clear" aria-label="Clear the search" hidden>&times;</button></form><ul class="addr-list" id="addr-list" role="listbox" aria-label="Suggested places" hidden></ul>';
+  var fieldToolbar = document.getElementById("field-toolbar"); fieldToolbar.insertBefore(addrBox, fieldToolbar.firstChild);
+  window.abiAddressSearch = setupAddressSearch(addrBox);
   function setupAddressSearch(box){
     var input = box.querySelector("input"), list = box.querySelector("ul"), clear = box.querySelector(".addr-clear"), form = box.querySelector("form");
     var items = [], active = -1, timer = null, request = 0, attributed = false;
@@ -500,11 +498,9 @@
     });
     input.addEventListener("blur", close);
     form.addEventListener("submit", function(e){ e.preventDefault(); });
-    clear.addEventListener("click", function(){
-      input.value = ""; clear.hidden = true; items = []; ++request; close();
-      if (addrMarker){ map.removeLayer(addrMarker); addrMarker = null; }
-      input.focus();
-    });
+    function reset(){ input.value = ""; clear.hidden = true; items = []; ++request; clearTimeout(timer); close(); if (addrMarker){ map.removeLayer(addrMarker); addrMarker = null; } }
+    clear.addEventListener("click", function(){ reset(); input.focus(); });
+    return { focus: function(){ input.focus(); }, reset: reset };
   }
 </script>
 <script src="policy.js?v=20261011-liming"></script>
@@ -512,6 +508,6 @@
 <script src="biochar_engine.js?v=20261011-fields"></script>
 <script src="insights.js?v=20261011-fields"></script>
 <script src="uploads.js?v=20261012-audit"></script>
-<script src="fields.js?v=20261012-fieldmode"></script>
+<script src="fields.js?v=20261013-address"></script>
 </body>
 </html>
