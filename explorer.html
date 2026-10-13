@@ -396,6 +396,10 @@ table.matrix td.ass{min-width:220px;}
 .dq-help{font-size:12.5px; line-height:1.5; color:var(--ink2); margin-top:8px; padding:8px 10px; border-radius:8px; background:var(--panel); border:1px solid var(--line2);}
 .dq-help a{color:var(--link);}
 
+:root{--g3ink:#262903; --partink:#fff;}
+:root[data-theme="light"]{--g3ink:#fff; --partink:#262903;}
+body.tips-off .infobtn + .infotip{display:none !important;}
+
 </style></head>
 <body>
 <div id="tip" role="status" aria-live="polite"></div>
@@ -418,8 +422,8 @@ table.matrix td.ass{min-width:220px;}
   <!-- ===================== THE BASICS ===================== -->
   <section class="view" id="view-grower" aria-label="The Basics view">
   <h1 id="h-grower" tabindex="-1">The NRCS biochar rating: what the science supports</h1>
-  <p class="lede">NRCS gives every mapped soil a rating from 0 to 1 for how much biochar is expected to improve it. This page explains what goes into that number, and how well research backs each piece.</p>
-  <div class="intro"><strong>The short answer:</strong> the rating looks at 13 factors. Research backs the main idea behind the soil factors: biochar tends to help most in acidic, low-carbon, sandy or compacted soils. But the rating is often set by a single site check. NRCS rates soils as mapped, before any drainage, so on tile- or ditch-drained land the water table and ponding checks may not apply. For four factors (slope, flooding, stony ground and shrink-swell clay), no study shows that they reduce what biochar does. No study tests the exact cutoffs NRCS uses.</div>
+  <p class="lede">The USDA Natural Resources Conservation Service (NRCS) gives every mapped soil a rating from 0 to 1 for how much biochar is expected to improve it. This page explains what goes into that number, and how well research backs each piece.</p>
+  <div class="intro"><strong>The short answer:</strong> the rating looks at 13 factors. Research backs the main idea behind the soil factors: biochar tends to help most in acidic, sandy, low-fertility soils; results for low-carbon and compacted soils are less consistent. But the rating is often set by a single site check. Mapped soil conditions may not reflect a field's current drainage, so on tile- or ditch-drained land the water table and ponding checks may not apply. For four factors (slope, flooding, stony ground and shrink-swell clay), no study validates the NRCS cutoffs, and the few studies that tested slope found mixed or no effects on biochar response. No study tests the exact cutoffs NRCS uses.</div>
   <p class="stamp" id="g-stamp"></p>
   <nav class="partnav" aria-label="Sections">
     <a href="#b-factors">The 13 factors</a>
@@ -442,13 +446,14 @@ table.matrix td.ass{min-width:220px;}
 
   <section class="panel" id="b-how">
     <h2>How the rating is worked out</h2>
+    <p class="sub">NRCS built the rating for a biochar like those from corn stover or manure, with medium-sized particles, spread on the surface with little tillage. A different biochar or application method may change which factors matter.</p>
     <ol class="steps">
       <li><strong>Score each soil property.</strong> Each of the seven soil properties earns from 0 to 0.15 points. A soil earns full points where it has the most room to improve, for example an acidic soil for pH.</li>
       <li><strong>Add up the points.</strong> Seven properties at 0.15 each come to 1.05 at most. NRCS caps the total at 1.</li>
       <li><strong>Check the site.</strong> Each of the six site checks gets a grade from 0 (fails) to 1 (no problem).</li>
       <li><strong>Take the lower number.</strong> The rating is the lower of the points total and the worst site check. One failed check makes the rating 0, however good the soil properties are.</li>
     </ol>
-    <p class="sub"><strong>Drained land.</strong> NRCS rates each soil as mapped, in its native condition. A field with working tile, ditches or surface mounding can be much drier than the map says, so its water table and ponding checks may not apply.</p>
+    <p class="sub"><strong>Drained land.</strong> Mapped soil conditions may not reflect a field's current drainage. A field with working tile, ditches or surface mounding can be much drier than the map says, so its water table and ponding checks may not apply.</p>
     <div class="classrow" id="b-classes" aria-label="Rating classes"></div>
     <h3 style="margin-top:22px">Two real soils from the same county</h3>
     <p class="sub">Both are sandy soils in Alcona County, Michigan. Their soil properties earn similar points. One has a water table near the surface, and that single check sets its rating.</p>
@@ -497,7 +502,7 @@ table.matrix td.ass{min-width:220px;}
 
   <section class="panel takeaways" id="b-home">
     <h2>Take-home message</h2>
-    <p class="homemsg">The soil-property half of the rating rests on sound research: biochar tends to do the most in acidic, low-carbon, sandy or compacted soils. The site-check half often sets the rating. NRCS rates soils before any drainage, so on drained land the water table and ponding checks may not apply, and four factors (slope, flooding, stony ground and shrink-swell clay) lack evidence as limits on what biochar does. Treat the rating as a starting point: check your drainage, use your own soil-test values, think about how you will apply biochar, and match the factors to your goal.</p>
+    <p class="homemsg">Research supports the direction of several soil-property curves: biochar tends to do the most in acidic, sandy, low-fertility soils, while results for low-carbon and compacted soils are less consistent. The site-check half often sets the rating. Mapped soil conditions may not reflect a field's current drainage, so on drained land the water table and ponding checks may not apply, and four factors (slope, flooding, stony ground and shrink-swell clay) have no validated cutoffs as limits on what biochar does. Treat the rating as a starting point: check your drainage, use your own soil-test values, think about how you will apply biochar, and match the factors to your goal.</p>
     <p class="sub" style="margin:12px 0 0">For the full evidence on each factor, open <a href="#" data-goto="agpro" class="linkbtn">For Ag Professionals</a>.</p>
   </section>
 
@@ -531,7 +536,7 @@ table.matrix td.ass{min-width:220px;}
   <div class="parthead" id="p-part1">
     <div class="eyebrow">Part 1</div>
     <h2>How the rating is computed</h2>
-    <p class="sub">Reconstructed from the NASIS rule schematic and criteria report, then validated against published SSURGO ratings.</p>
+    <p class="sub">Reconstructed from the NASIS rule schematic and criteria report, then validated against published SSURGO ratings. NRCS assumes a corn-stover or manure biochar of medium particle size, surface applied with minimal tillage incorporation; a different product or placement may change which factors are relevant.</p>
   </div>
   <section class="panel">
     <div class="formula"><b>Rating</b> = min( water table, slope and O horizon, ponding, flooding, cobbles and stones, karst, min(1, 0.15 &times; [AWC + BD ratio + Ksat + LEP + MEQ + OC + pH]) )</div>
@@ -541,7 +546,7 @@ table.matrix td.ass{min-width:220px;}
       <li><strong>Curves</strong> are NASIS S-curves (piecewise quadratic) between the published breakpoints, linear for slope, and class lookups for flooding, ponding and karst.</li>
       <li><strong>Classes</strong> use quarter cuts: 0 Negligible; to 0.25 Low; to 0.50 Fair; to 0.75 Good; above 0.75 Excellent.</li>
       <li><strong>Validation.</strong> With all factors on and no user data, the Institute's engine reproduces 100% of 34,821 published Michigan component ratings (largest difference 0.001). Rebuilt from SSURGO properties alone, 95.5% match exactly.</li>
-      <li><strong>Native condition.</strong> Ratings describe soils as mapped, in their native condition. Water table, ponding and flooding reflect undrained hydrology; SSURGO does not record artificial drainage.</li>
+      <li><strong>Mapped condition.</strong> Ratings describe soils as mapped. Mapped water table, ponding and flooding may not match a field's current drainage, and some mapped components already represent drained conditions.</li>
       <li><strong>Stored subrules.</strong> NRCS stores only the five most limiting subrules per component. Unstored dynamic values are calculated from SSURGO and calibrated so the all-on score equals the published rating.</li>
     </ul>
   </section>
@@ -1390,15 +1395,15 @@ window.MODEL = {
    "n": 1,
    "key": "g1",
    "title": "Not enough evidence to keep in the score",
-   "basic": "We suggest switching these off. No study shows that they reduce what biochar does for a soil. They matter for how and when you apply biochar, so keep them as field notes, not as limits on the score.",
-   "pro": "No retained study tests these factors as limits on biochar response. NRCS's own rule text says slope, flooding and rock fragments affect the application and use of biochar but cannot be changed by it, and the shrink-swell evidence points the other way. The Institute suggests removing them from the response score and handling them as operational notes. The national map starts with the NRCS rating; users can leave these four out together or one at a time."
+   "basic": "We suggest switching these off. No study validates these NRCS cutoffs, and the few that tested slope found mixed or no effects. They matter for how and when you apply biochar, so keep them as field notes, not as limits on the score.",
+   "pro": "No study validates these NRCS cutoffs. Slope has been tested as a moderator of some soil outcomes, with mixed or null results; the others have not been tested as limits on biochar response. NRCS's own rule text says slope, flooding and rock fragments affect the application and use of biochar but cannot be changed by it, and the shrink-swell evidence points the other way. The Institute suggests removing them from the response score and handling them as operational notes. The national map starts with the NRCS rating; users can leave these four out together or one at a time."
   },
   {
    "n": 2,
    "key": "g2",
    "title": "Depends on your field",
-   "basic": "NRCS rates soils as mapped, before any drainage. If the land is artificially drained, the mapped water table and ponding no longer describe it: answer Yes below to switch them off. Karst stays on unless a site visit rules out sinkholes.",
-   "pro": "NRCS rates soils in their native condition. Water table and ponding describe undrained hydrology, so they depend on whether the land is artificially drained (the national map's drainage question). Karst is a groundwater safeguard that needs site verification rather than a map-name flag."
+   "basic": "Mapped soil conditions may not reflect your field's current drainage. If the land has working artificial drainage that the mapped soil does not already reflect, answer Yes below to leave the water table and ponding checks out. Karst stays on unless a site visit rules out sinkholes.",
+   "pro": "Mapped water table and ponding may not reflect a field's current drainage; some mapped components already represent drained conditions. These checks therefore depend on how the field is drained now (the national map's drainage question). Karst is a groundwater safeguard that needs site verification rather than a map-name flag."
   },
   {
    "n": 3,
@@ -1458,7 +1463,7 @@ window.MODEL = {
      ]
     },
     {
-     "t": "A forest floor changes the picture. Field studies on forest soils give context but do not confirm the NRCS thickness steps.",
+     "t": "A forest floor changes the picture. Field and laboratory studies on forest soils give context but do not confirm the NRCS thickness steps.",
      "c": [
       "S34",
       "S90",
@@ -1688,7 +1693,7 @@ window.MODEL = {
      ]
     },
     {
-     "t": "Controlled studies on clayey soils and Vertisols found less shrink-swell and cracking, with effects that depended on the biochar and the rate (2 to 6% by mass).",
+     "t": "Zong 2014 found less shrink-swell and cracking at 2 to 6% biochar by mass; Sun and Lu 2014 found material-specific gains in aggregation, water retention and pore structure in a Vertisol.",
      "c": [
       "S39",
       "S96"
@@ -1815,7 +1820,7 @@ window.MODEL = {
    "kind": "site",
    "name": "Ponding",
    "tech": "Ponding frequency class",
-   "def": "How often rain or snowmelt stands in water on the surface. NRCS rates the soil as mapped, before any drainage.",
+   "def": "How often rain or snowmelt stands in water on the surface. The mapped frequency may not reflect a field's current drainage.",
    "assume": "Standing water can float biochar away, so ponded soils get a lower rating. Occasional or frequent ponding fails the check.",
    "rule": "None passes (1.0); rare 0.17; occasional or frequent fails (0). No class recorded passes.",
    "curve": {
@@ -2271,7 +2276,7 @@ window.MODEL = {
      ]
     },
     {
-     "t": "How water is measured matters: by volume, a sand gained a little plant-available water and a silt loam and a clay did not change.",
+     "t": "How water is measured matters: at 2% biochar, plant-available water rose 57% in a sand and 20% in a silt loam by volume, and about 2% in a clay; gains were larger when reported by mass.",
      "c": [
       "EHGQG52N"
      ]
@@ -2859,6 +2864,7 @@ X.forEach(function(x){
   var c = rated[0], m = E.buildComponent(c);
   SOILS.push({ mukey: x.mukey, muname: x.muname, note: x.note, area: x.areaname, comp: c, model: m, mapped: mapped(c) });
 });
+function isOrganic(c){ var t = [c.taxorder, c.taxsubgrp, c.taxgrtgroup, c.taxsuborder].map(function(x){ return String(x || "").toLowerCase(); }); return !!c.taxorder && (/histosols/.test(t[0]) || /^histic/.test(t[1]) || /histoturbels/.test(t[2]) || /histels/.test(t[3])); }
 function mapped(c){
   var hz = (c.horizons || []).filter(function(h){ return h.hzdept_r != null && h.hzdepb_r != null && !/^O/.test(h.hzname || ""); });
   var acc = { db: [0,0], sand: [0,0], silt: [0,0], clay: [0,0] };
@@ -2942,7 +2948,7 @@ function makeScenario(root, level){
   sel.addEventListener("change", function(){ st.soil = +sel.value; update(); });
   root.addEventListener("click", function(e){
     var sw = e.target.closest("[data-sw]");
-    if (sw) { var k = sw.getAttribute("data-sw"); st.active[k] = !st.active[k]; update(); return; }
+    if (sw) { var k = sw.getAttribute("data-sw"); st.active[k] = !st.active[k]; if ((k === "wt" || k === "pond") && st.active[k] && st.drained === "yes") st.drained = ""; update(); return; }
     var a = e.target.closest("[data-act]");
     if (a) { var act = a.getAttribute("data-act");
       if (act === "reset") { M.factors.forEach(function(f){ st.active[f.key] = true; st.vals[f.key] = ""; }); st.drained = ""; $$("[data-in]", root).forEach(function(i){ i.value = ""; }); }
@@ -2956,9 +2962,9 @@ function makeScenario(root, level){
   root.addEventListener("input", function(e){ var i = e.target.closest("[data-in]"); if (!i) return; st.vals[i.getAttribute("data-in")] = i.value; update(); });
 
   function dataFor(s){
-    var d = {}, mp = s.mapped;
+    var d = {}, mp = s.mapped; st.bad = [];
     M.factors.forEach(function(f){
-      var v = st.vals[f.key]; if (v === "" || v == null || isNaN(+v)) return; v = +v;
+      var v = st.vals[f.key]; if (v === "" || v == null || isNaN(+v) || !isFinite(+v)) return; v = +v; var inp = f.input || {}; if ((inp.min != null && inp.min !== "" && v < +inp.min) || (inp.max != null && inp.max !== "" && v > +inp.max)) { st.bad.push(f.name + " is outside " + inp.min + " to " + inp.max + " " + (inp.unit || "")); return; } if (f.key === "bd" && isOrganic(s.comp)) { st.bad.push("measured bulk density does not apply to organic soils, which NRCS gives no density points"); return; }
       if (f.key === "ph") d.ph = { ph: v };
       if (f.key === "oc" && mp.db) d.oc = { om: v, bd: mp.db, depth: 30 };
       if (f.key === "meq" && mp.db) d.meq = { cec: v, bd: mp.db, depth: 30 };
@@ -2972,8 +2978,8 @@ function makeScenario(root, level){
     var s = SOILS[st.soil], m = s.model;
     var res = scoreOf(m, st.active, dataFor(s));
     var T = +m.top.rep;
-    $("#" + P + "-nrcs", root).textContent = f2(T); $("#" + P + "-nrcsc", root).innerHTML = badge(T);
-    $("#" + P + "-you", root).textContent = res.rating == null ? "–" : f2(res.rating); $("#" + P + "-youc", root).innerHTML = badge(res.rating);
+    $("#" + P + "-nrcs", root).textContent = f3(T); $("#" + P + "-nrcsc", root).innerHTML = badge(T);
+    $("#" + P + "-you", root).textContent = res.rating == null ? "–" : f3(res.rating); $("#" + P + "-youc", root).innerHTML = badge(res.rating);
     M.factors.forEach(function(f){
       var on = st.active[f.key], row = $('.frow[data-k="' + f.key + '"]', root), sw = $('[data-sw="' + f.key + '"]', root);
       sw.setAttribute("aria-checked", on ? "true" : "false");
@@ -2995,7 +3001,7 @@ function makeScenario(root, level){
       note = "The rating is set by a site check: <b>" + esc(lim.join(" and ")) + "<\/b> (grade " + f2(r.site) + "). The soil-property points come to " + f2(r.dyn) + ".";
     } else note = "The rating is set by the soil-property points (" + f2(r.dyn) + "). Every site check grades " + f2(r.site) + " or higher.";
     if (r.k < DYN.length && r.k > 0) note += " With " + r.k + " of 7 soil properties on, each is worth up to " + fw(r.w) + " points.";
-    if (st.drained === "yes") note += " Drained land: water table and ponding are switched off.";
+    if (st.drained === "yes" && !st.active.wt && !st.active.pond) note += " Drained land: water table and ponding are switched off."; if (st.bad && st.bad.length) note += " Not used: " + st.bad.join("; ") + ". The mapped value applies until it is corrected.";
     $("#" + P + "-note", root).innerHTML = note + (level === "pro" ? " " + esc(s.note) + "." : "");
     var dsel = $("#" + P + "-drain", root); if (dsel) dsel.value = st.drained;
     drawBreak($("#" + P + "-break", root), res, st.active, level);
@@ -3025,7 +3031,7 @@ function drawBreak(host, res, active, level, compact){
     if (v > 0) {
       var r = el("rect", { x: sx(x0), y: y, width: Math.max(0, sx(x0 + v) - sx(x0)), height: 20, fill: GC[f.group], opacity: on ? 1 : 0.35, stroke: "var(--panel)", "stroke-width": 1 });
       var t = el("title"); t.textContent = f.name + ": " + f2(v) + " points"; r.appendChild(t); s.appendChild(r);
-      if (sx(x0 + v) - sx(x0) > 34) s.appendChild(txt((sx(x0) + sx(x0 + v)) / 2, y + 14, shortName(f.key), { "text-anchor": "middle", "font-size": "10.5", fill: f.group === 3 ? "#fff" : "#262903" }));
+      if (sx(x0 + v) - sx(x0) > 34) s.appendChild(txt((sx(x0) + sx(x0 + v)) / 2, y + 14, shortName(f.key), { "text-anchor": "middle", "font-size": "10.5", fill: f.group === 3 ? "var(--g3ink)" : "#262903" }));
     }
     x0 += v;
   });
@@ -3044,7 +3050,7 @@ function drawBreak(host, res, active, level, compact){
   s.appendChild(txt(sx(rr), 11, "Rating " + f2(rr), { "text-anchor": rr > 0.85 ? "end" : "middle", fill: "var(--ink)", "font-weight": "600", "font-size": "12" }));
   host.appendChild(s);
 }
-function shortName(k){ return { ph: "pH", oc: "Carbon", meq: "CEC", awc: "Water", bd: "Density", ksat: "Ksat", lep: "LEP" }[k] || k; }
+function shortName(k){ return { ph: "pH", oc: "Carbon", meq: "CEC", awc: "Water", bd: "Density", ksat: "Drainage", lep: "Shrink" }[k] || k; }
 
 /* ---------- charts ---------- */
 function barChart(host, items, opts){
@@ -3078,7 +3084,7 @@ function stackChart(host, rows, label){
       var v = rw.v[c.k] || 0; if (v <= 0) return;
       var r = el("rect", { x: sx(x), y: y, width: sx(x + v) - sx(x), height: 30, fill: c.color, stroke: c.k === "neg" ? "var(--line)" : "var(--panel)", "stroke-width": 1 });
       var t = el("title"); t.textContent = rw.label + ", " + c.name + ": " + pct(v); r.appendChild(t); s.appendChild(r);
-      if (sx(x + v) - sx(x) > 38) s.appendChild(txt((sx(x) + sx(x + v)) / 2, y + 19, Math.round(v) + "%", { "text-anchor": "middle", "font-size": "11.5", "font-weight": "600", fill: (c.k === "good" || c.k === "exc") ? "#fff" : "#262903" }));
+      if (sx(x + v) - sx(x) > 38) s.appendChild(txt((sx(x) + sx(x + v)) / 2, y + 19, Math.round(v) + "%", { "text-anchor": "middle", "font-size": "11.5", "font-weight": "600", fill: c.k === "exc" ? "#fff" : c.k === "good" ? "#000" : "#262903" }));
       x += v;
     });
   });
@@ -3140,7 +3146,7 @@ function drawCurves(){
 
 /* ---------- Basics ---------- */
 function initBasics(){
-  $("#g-stamp").textContent = "Evidence review: 104 studies (October 2026) plus an ABI library sweep · Library state " + M.libraryState.split(" (")[0] + " · Michigan ratings: SSURGO, August 2023";
+  $("#g-stamp").textContent = "Evidence review: 104 studies (October 2026) plus a sweep of the Institute's research library · Library state " + M.libraryState.split(" (")[0] + " · Michigan ratings: SSURGO (NRCS Soil Survey Geographic Database), August 2023";
   var ord = function(keys){ return keys.map(function(k){ return F[k]; }); };
   var site = ord(["wt","slope","pond","flood","cobble","karst"]), prop = ord(["ph","oc","meq","awc","bd","ksat","lep"]);
   var defs = function(list){ return list.map(function(f){ return '<div class="defitem"><dt>' + esc(f.name) + '<\/dt><dd>' + esc(f.def) + '<\/dd><dd class="assume"><b>NRCS assumes:<\/b> ' + esc(f.assume) + '<\/dd><\/div>'; }).join(""); };
@@ -3156,12 +3162,12 @@ function initBasics(){
     var c = document.createElement("div"); c.className = "cx"; h.appendChild(c); host.appendChild(h); drawBreak(c, res, all, "basic");
   });
   var ag = SOILS.filter(function(x){ return x.mukey === "190249"; })[0], agd = ag ? scoreOf(ag.model, { wt: false, pond: false }, {}).rating : null;
-  $("#b-example-note").innerHTML = "Computed from SSURGO map data (August 2023) with the Institute's engine, which reproduces the published NRCS ratings. Eastport sand is well drained; Au Gres sand has a seasonal water table near the surface. NRCS rates both as mapped, before any drainage. If Au Gres were tile drained, answering Yes to the drainage question would switch off that check, and its soil properties would set its rating: " + f2(agd) + " (" + (agd != null ? CLS[clsOf(agd)].name : "") + ").";
+  $("#b-example-note").innerHTML = "Computed from SSURGO map data (August 2023) with the Institute's engine, which reproduces the published NRCS ratings. Eastport sand is well drained; Au Gres sand has a seasonal water table near the surface. Mapped wetness may not reflect a field's current drainage. If Au Gres were tile drained, answering Yes to the drainage question would switch off that check, and its soil properties would set its rating: " + f2(agd) + " (" + (agd != null ? CLS[clsOf(agd)].name : "") + ").";
   makeScenario($("#b-scen"), "basic");
   barChart($("#b-chart1"), siteItems(), { label: "Share of Michigan soils whose rating is set by each factor" });
   $("#b-note1").innerHTML = "<strong>Read it this way:<\/strong> for almost half of Michigan soils, the water table check sets the rating, and for " + pct(M.mi.zeroBy.wt) + " it makes the rating 0. NRCS rates soils as mapped, before any tile or ditch drainage, so on drained land this check overstates the limit. Only " + pct(M.mi.governed.dynamic) + " of soils are rated on their soil properties. Nationally, " + f1(natNegPct) + "% of rated acres in the lower 48 states (" + Math.round(NAT.neg / 1e6) + " million of " + (NAT.rated / 1e9).toFixed(2) + " billion acres) rate Negligible.";
   stackChart($("#b-chart2"), scenRows(), "Michigan soils by rating class under four settings"); classLegend($("#b-legend2"));
-  $("#b-note2").innerHTML = "<strong>Read it this way:<\/strong> treating the land as drained (water table and ponding off) moves " + pct(M.mi.changedClass.drained) + " of Michigan soils into a different class and cuts Negligible from " + pct(M.mi.classes.nrcs.neg) + " to " + pct(M.mi.classes.drained.neg) + ". Switching off the four Group 1 factors moves " + pct(M.mi.changedClass.g1off) + ". With both, no soil stays at Negligible. The map data cannot tell which fields are drained, so the drained bars show what is possible, not what is true for every field.";
+  $("#b-note2").innerHTML = "<strong>Read it this way:<\/strong> treating the land as drained (water table and ponding off) moves " + pct(M.mi.changedClass.drained) + " of Michigan soils into a different class and cuts Negligible from " + pct(M.mi.classes.nrcs.neg) + " to " + pct(M.mi.classes.drained.neg) + ". Switching off the four Group 1 factors moves " + pct(M.mi.changedClass.g1off) + ". With both, only 1 of 34,821 components stays Negligible (" + pct(M.mi.classes.g1dr.neg) + "). The map data cannot tell which fields are drained, so the drained bars show what is possible, not what is true for every field.";
   // matrix
   var rows = M.factors.slice().sort(function(a, b){ return a.group - b.group; }).map(function(f){
     return '<tr><td class="fac">' + esc(f.name) + '<\/td><td>' + grpPill(f.group) + '<\/td><td class="ass">' + esc(f.assume.split(". ")[0].replace(/\.$/, "")) + '.<\/td><td><span class="dir dir-' + f.dir + '"><i><\/i>' + DIR[f.dir] + '<\/span><\/td><td>' + strPill(f.strength) + '<\/td><\/tr>';
@@ -3169,7 +3175,7 @@ function initBasics(){
   $("#b-matrix").innerHTML = '<table class="matrix"><thead><tr><th>Factor<\/th><th>Group<\/th><th>What NRCS assumes<\/th><th>Does research support it?<\/th><th>Evidence<\/th><\/tr><\/thead><tbody>' + rows + '<\/tbody><\/table>';
   $("#b-meansList").innerHTML = [
     "Use the NRCS rating as a starting point, not a verdict. A rating of 0 often comes from one site check, not from the soil itself.",
-    "Check your drainage. NRCS rates soils as mapped, before any drainage. If your field has working tile, ditches or surface mounding, answer Yes to the drainage question: the water table and ponding checks no longer describe your field.",
+    "Check your drainage. Mapped soil conditions may not reflect your field's current drainage. If your field has working tile, ditches or surface mounding that the mapped soil does not already reflect, answer Yes to the drainage question to leave the water table and ponding checks out.",
     "If your rating is low because of slope, flooding, stony ground or shrink-swell clay, research does not say biochar will fail there. These are about how and when you apply it: work biochar in, apply outside the flood season, use equipment that is safe on the slope, and adjust your rate for rock.",
     "If biochar will sit on the surface of undrained wet ground, or near sinkholes, take those checks seriously. Work biochar in, keep the ground covered, and stay back from water.",
     "A soil test beats the map. Enter your pH, organic matter, CEC and other values above to see how your field compares with the mapped soil.",
@@ -3181,7 +3187,7 @@ function initBasics(){
     "The evidence: a review of 104 studies completed in October 2026, plus papers found by a full-text search of the Institute's research library (library state " + M.libraryState.split(" (")[0] + ").",
     "Michigan figures: SSURGO soil survey data (August 2023 export), run through the Institute's rating engine.",
     "National figure: the Institute's national map draft, NRCS published ratings for the lower 48 states."
-  ].map(function(t){ return "<li>" + esc(t) + "<\/li>"; }).join("") + '<li>Map your own fields with the same choices on the Institute\'s <a href="https://american-biochar-institute.github.io/biochar-national-map/" target="_blank" rel="noopener">national map<\/a>.<\/li>';
+  ].map(function(t){ return "<li>" + esc(t) + "<\/li>"; }).join("") + '<li>Map your own fields with the shared drainage, pH and Group 1 choices (this page offers more soil-property switches) on the Institute\'s <a href="https://american-biochar-institute.github.io/biochar-national-map/" target="_blank" rel="noopener">national map<\/a>.<\/li>';
 }
 
 /* ---------- For Ag Professionals ---------- */
@@ -3250,7 +3256,7 @@ function initPro(){
   // takeaways
   var mi = M.mi;
   var take = [
-    { s: "thin", t: "Drainage decides much of the rating. NRCS rates soils in their native condition; the water table binds for " + pct(mi.siteLimits.wt) + " of Michigan components and sets " + pct(mi.zeroBy.wt) + " to 0 (Part 4). The NASIS rule text says the effect of a shallow water table on biochar function is unknown, and a Florida high-water-table pasture showed a 60% cut in nitrogen leaching (Part 3). Treating the land as drained moves " + pct(mi.changedClass.drained) + " of components to another class (Part 4). Ask whether a field is drained before reading a low rating as a poor fit." },
+    { s: "thin", t: "Drainage decides much of the rating. Mapped wetness may not reflect a field's current drainage; the water table binds for " + pct(mi.siteLimits.wt) + " of Michigan components and sets " + pct(mi.zeroBy.wt) + " to 0 (Part 4). The NASIS rule text says the effect of a shallow water table on biochar function is unknown, and a Florida high-water-table pasture showed a 60% cut in nitrogen leaching (Part 3). Treating the land as drained moves " + pct(mi.changedClass.drained) + " of components to another class (Part 4). Ask whether a field is drained before reading a low rating as a poor fit." },
     { s: "emerging", t: "Slope, flooding, and cobbles and stones describe how and when to apply biochar, not how the soil responds. Erosion fell 28% on average across 174 comparisons, but loose biochar moved off plots in the first years: 24 to 45% was unaccounted for after one year in Zambian sands (Part 3). Switching off the four Group 1 factors moves " + pct(mi.changedClass.g1off) + " of components to another class (Part 4). Handle them as application notes, and report any adjusted score beside the published rating with its settings named (Part 2)." },
     { s: "established", t: "The soil-property curves point the right way for crop and soil-function goals. Available water rose about 45% in coarse versus 14% in fine soils, and yield gains concentrate in acidic soils (pH below 4.5) and soils with CEC below 10 cmol/kg (Part 3). No breakpoint is validated, so a measured value is worth more than the curve's exact shape (Parts 1 and 2)." },
     { s: "established", t: "Ksat and organic carbon depend on the goal. Biochar cut Ksat by 38.7% on average, falling in sands and rising in clays, and most biochar carbon persists whatever the soil's starting carbon (Part 3). Switch these off for a drainage goal in a slow soil or a carbon-storage goal; the property is then left out and the rest rescaled, so the score can fall as well as rise (Part 2)." }
@@ -3267,7 +3273,7 @@ function dynChart(){
     var d = M.mi.dyn[k], y = 6 + i * row, parts = [["Full", d.full, "var(--s1)"], ["Partial", Math.max(0, 100 - d.full - d.none), "var(--s4)"], ["None", d.none, "var(--s2)"]], x = 0;
     s.appendChild(txt(L - 10, y + 15, F[k].name, { "text-anchor": "end", fill: "var(--ink)" }));
     parts.forEach(function(p){ if (p[1] <= 0) return; var r = el("rect", { x: sx(x), y: y + 2, width: sx(x + p[1]) - sx(x), height: 20, fill: p[2], stroke: "var(--panel)" }); var t = el("title"); t.textContent = F[k].name + ", " + p[0] + ": " + pct(p[1]); r.appendChild(t); s.appendChild(r);
-      if (sx(x + p[1]) - sx(x) > 36) s.appendChild(txt((sx(x) + sx(x + p[1])) / 2, y + 16, Math.round(p[1]) + "%", { "text-anchor": "middle", "font-size": "11", "font-weight": "600", fill: p[0] === "None" ? "#262903" : "#fff" }));
+      if (sx(x + p[1]) - sx(x) > 36) s.appendChild(txt((sx(x) + sx(x + p[1])) / 2, y + 16, Math.round(p[1]) + "%", { "text-anchor": "middle", "font-size": "11", "font-weight": "600", fill: p[0] === "None" ? "#262903" : p[0] === "Full" ? "var(--g3ink)" : "var(--partink)" }));
       x += p[1]; });
   });
   host.appendChild(s);
@@ -3303,7 +3309,8 @@ function shell(){
   var closeTips = function(){ infos.forEach(function(b){ b.setAttribute("aria-expanded", "false"); }); };
   infos.forEach(function(b){ b.addEventListener("click", function(e){ e.stopPropagation(); var open = b.getAttribute("aria-expanded") === "true"; closeTips(); b.setAttribute("aria-expanded", open ? "false" : "true"); }); });
   document.addEventListener("click", closeTips);
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeTips(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") { closeTips(); document.body.classList.add("tips-off"); document.querySelectorAll(".dq-help").forEach(function(h){ h.hidden = true; }); document.querySelectorAll("[data-dq]").forEach(function(b){ b.setAttribute("aria-expanded", "false"); }); } });
+  document.addEventListener("focusin", function(){ document.body.classList.remove("tips-off"); }); document.addEventListener("mouseover", function(e){ if (e.target.closest && e.target.closest(".infobtn")) document.body.classList.remove("tips-off"); });
   function reveal(id){ var t = document.getElementById(id); if (!t) return false;
     if (t.closest("#view-grower") && $("#view-grower").hidden) showView("grower", false);
     if (t.closest("#view-explorer") && $("#view-explorer").hidden) showView("agpro", false);
