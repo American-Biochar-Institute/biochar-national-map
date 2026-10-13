@@ -458,6 +458,8 @@ body.tips-off .infobtn + .infotip{display:none !important;}
     </ol>
     <p class="sub"><strong>Drained land.</strong> Mapped soil conditions may not reflect a field's current drainage. A field with working tile, ditches or surface mounding can be much drier than the map says, so its water table and ponding checks may not apply.</p>
     <div class="classrow" id="b-classes" aria-label="Rating classes"></div>
+    <p class="sub"><strong>Why we chose Michigan.</strong> We chose Michigan because its statewide SSURGO soil-survey data and published NRCS biochar ratings were already available, and the state has varied soils and landscape features, including <a href="https://mgs.wmich.edu/education-and-outreach/michigan-geology/sinkholes/" target="_blank" rel="noopener">karst areas</a>. That gave us a practical first case for checking the calculations and comparing scoring settings. This is a worked example using mapped soils, not a biochar field trial or a nationally representative sample. The Michigan percentages count soil components, not acres.</p>
+    <p class="note"><strong>What this test does not cover.</strong> Michigan has karst landscapes, but no karst cases were observed in the rating records analyzed here. These figures do not test the karst part of the calculation.</p>
     <h3 style="margin-top:22px">Two real soils from the same county</h3>
     <p class="sub">Both are sandy soils in Alcona County, Michigan. Their soil properties earn similar points. One has a water table near the surface, and that single check sets its rating.</p>
     <div id="b-example" class="cx"></div>
@@ -474,7 +476,6 @@ body.tips-off .infobtn + .infotip{display:none !important;}
   <div class="parthead">
     <div class="eyebrow">What the data show</div>
     <h2>What drives ratings today, and what research says</h2>
-    <p class="sub"><strong>Why Michigan?</strong> A statewide soil-survey dataset was available for checking the calculations against published NRCS ratings and showing how different settings change them. We use Michigan as a worked example. These are calculations from mapped soils, not Michigan biochar field-trial results. The Michigan percentages count soil components, not acres; they are not national estimates.</p>
   </div>
 
   <section class="panel" id="b-fig1">
@@ -534,6 +535,8 @@ body.tips-off .infobtn + .infotip{display:none !important;}
 
   <section class="panel findings" id="p-keys">
     <h2 style="margin-bottom:18px">Key findings</h2>
+    <p class="sub"><strong>Why we chose Michigan.</strong> We chose Michigan because its statewide SSURGO soil-survey data and published NRCS biochar ratings were already available, and the state has varied soils and landscape features, including <a href="https://mgs.wmich.edu/education-and-outreach/michigan-geology/sinkholes/" target="_blank" rel="noopener">karst areas</a>. That gave us a practical first case for checking the calculations and comparing scoring settings. This is a worked example using mapped soils, not a biochar field trial or a nationally representative sample. The Michigan percentages count soil components, not acres.</p>
+    <p class="note"><strong>What this test does not cover.</strong> Michigan has karst landscapes, but no karst cases were observed in the rating records analyzed here. These figures do not test the karst part of the calculation.</p>
     <div class="kgrid" id="p-keygrid"></div>
   </section>
 
@@ -584,7 +587,6 @@ body.tips-off .infobtn + .infotip{display:none !important;}
     <div class="eyebrow">Part 4</div>
     <h2>What limits ratings on the ground</h2>
     <p class="sub">All 34,821 rated Michigan soil components (SSURGO export, August 2023), run through the Institute's engine. Shares are of components, not acres. A separate national map figure gives scale.</p>
-    <p class="sub"><strong>Why Michigan?</strong> A statewide soil-survey dataset was available for checking the calculations against published NRCS ratings and showing how different settings change them. We use Michigan as a worked example. These are calculations from mapped soils, not Michigan biochar field-trial results. The Michigan percentages count soil components, not acres; they are not national estimates.</p>
   </div>
   <section class="panel" id="p-fig1">
     <h2>Which factor sets the rating</h2>
@@ -1598,7 +1600,7 @@ function initBasics(){
   $("#b-example-note").innerHTML = "Computed from SSURGO map data (August 2023) with the Institute's engine, which reproduces the published NRCS ratings. Eastport sand is well drained; Au Gres sand has a seasonal water table near the surface. Mapped wetness may not reflect a field's current drainage. If Au Gres were tile drained, answering Yes to the drainage question would switch off that check, and its soil properties would set its rating: " + f2(agd) + " (" + (agd != null ? CLS[clsOf(agd)].name : "") + ").";
   makeScenario($("#b-scen"), "basic");
   barChart($("#b-chart1"), siteItems(), { label: "Share of Michigan soils whose rating is set by each factor" });
-  $("#b-note1").innerHTML = "<strong>Read it this way:<\/strong> for almost half of Michigan soils, the water table check sets the rating, and for " + pct(M.mi.zeroBy.wt) + " it makes the rating 0. NRCS rates soils as mapped, before any tile or ditch drainage, so on drained land this check overstates the limit. Only " + pct(M.mi.governed.dynamic) + " of soils are rated on their soil properties. Nationally, " + f1(natNegPct) + "% of rated acres in the lower 48 states (" + Math.round(NAT.neg / 1e6) + " million of " + (NAT.rated / 1e9).toFixed(2) + " billion acres) rate Negligible.";
+  $("#b-note1").innerHTML = "<strong>Read it this way:<\/strong> for almost half of Michigan soils, the water table check sets the rating, and for " + pct(M.mi.zeroBy.wt) + " it makes the rating 0. Mapped wetness may not reflect current field drainage. Where working drainage makes a field drier than its mapped condition, the water table check may overstate the limit. Only " + pct(M.mi.governed.dynamic) + " of soils are rated on their soil properties. Nationally, " + f1(natNegPct) + "% of rated acres in the lower 48 states (" + Math.round(NAT.neg / 1e6) + " million of " + (NAT.rated / 1e9).toFixed(2) + " billion acres) rate Negligible.";
   stackChart($("#b-chart2"), scenRows(), "Michigan soils by rating class under four settings"); classLegend($("#b-legend2"));
   $("#b-note2").innerHTML = "<strong>Read it this way:<\/strong> treating the land as drained (water table and ponding off) moves " + pct(M.mi.changedClass.drained) + " of Michigan soils into a different class and cuts Negligible from " + pct(M.mi.classes.nrcs.neg) + " to " + pct(M.mi.classes.drained.neg) + ". Switching off the four Group 1 factors moves " + pct(M.mi.changedClass.g1off) + ". With both, only 1 of 34,821 components stays Negligible (" + pct(M.mi.classes.g1dr.neg) + "). The map data cannot tell which fields are drained, so the drained bars show what is possible, not what is true for every field.";
   // matrix
