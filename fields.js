@@ -32,12 +32,21 @@
   drawer.enable();$(kind==='polygon'?'draw-field':'draw-rect').setAttribute('aria-pressed','true');
   setHint(kind==='polygon'?'Click each corner of the field, then click the first corner to finish. Escape cancels.':'Drag from one corner of the field to the opposite corner. Escape cancels.');
  }
+ // Field mode: while the field tool is open or fields exist, the state, county and current-view acreage
+ // collapse so the panel shows only field totals; a link reopens it (October 12, 2026).
+ const acreageSection=$('acreage-section'),showAcreage=$('show-acreage');
+ function setFieldMode(on){
+  acreageSection.hidden=on;showAcreage.hidden=!on;
+  showAcreage.setAttribute('aria-expanded','false');showAcreage.textContent='Show state and county acreage';
+ }
+ function leaveFieldModeIfEmpty(){if(!fields.length&&toolbar.hidden)setFieldMode(false);}
+ showAcreage.addEventListener('click',()=>{const open=acreageSection.hidden;acreageSection.hidden=!open;showAcreage.setAttribute('aria-expanded',String(open));showAcreage.textContent=open?'Hide state and county acreage':'Show state and county acreage';});
  $('select-fields').disabled=false;
- $('select-fields').addEventListener('click',()=>{M.setOpacity(0);toolbar.hidden=false;setHint('Draw a field, or upload field boundaries. Add as many fields as you need.');$('draw-field').focus();});
+ $('select-fields').addEventListener('click',()=>{M.setOpacity(0);toolbar.hidden=false;setFieldMode(true);$('fields-title').scrollIntoView({block:'start'});setHint('Draw a field, or upload field boundaries. Add as many fields as you need.');$('draw-field').focus();});
  $('draw-field').addEventListener('click',()=>draw('polygon'));
  $('draw-rect').addEventListener('click',()=>draw('rectangle'));
  $('upload-fields').addEventListener('click',()=>fileInput.click());
- $('fields-done').addEventListener('click',()=>{stopDrawing();toolbar.hidden=true;$('select-fields').focus();});
+ $('fields-done').addEventListener('click',()=>{stopDrawing();toolbar.hidden=true;leaveFieldModeIfEmpty();$('select-fields').focus();});
  map.on('draw:drawstop',()=>{for(const id of ['draw-field','draw-rect'])$(id).setAttribute('aria-pressed','false');drawer=null;});
  map.on('draw:created',e=>{stopDrawing();const f=addField(e.layer.toGeoJSON().geometry,null);setHint(f.name+' added. Draw another field, upload boundaries, or press Done.');});
 
@@ -71,7 +80,7 @@
  }
  function removeField(f){
   f.removed=true;map.removeLayer(f.outline);if(f.soilLayer)map.removeLayer(f.soilLayer);
-  fields.splice(fields.indexOf(f),1);if(selected&&selected.field===f)selected=null;renderList();renderTotals();renderSoil();
+  fields.splice(fields.indexOf(f),1);if(selected&&selected.field===f)selected=null;renderList();renderTotals();renderSoil();leaveFieldModeIfEmpty();
  }
 
  // ---- lookups: queued, paced under the service's rate limit, each part sent on its own ----

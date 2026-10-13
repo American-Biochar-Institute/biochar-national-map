@@ -44,7 +44,7 @@
   #legend .sw{width:15px;height:15px;margin-right:8px;border:1px solid rgba(0,0,0,.2);border-radius:2px;flex:0 0 auto}
   #legend .note{margin-top:9px;color:var(--muted);font-size:11px;line-height:1.45}
   /* About panel now bottom-left, clear of the top-left zoom control */
-  #about{bottom:22px;left:12px;padding:9px 12px;max-width:270px}
+  #about{bottom:44px;left:12px;padding:9px 12px;max-width:270px}
   #about .lt{font-weight:700;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--moss-d);margin-bottom:4px}
   #about p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.5}
   #about a{color:var(--moss-d)}
@@ -65,6 +65,7 @@
   .county-label{font:600 10px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#333;-webkit-text-stroke-width:2px;}
   .state-label.small{display:none;}
   #map.zoomed-in .state-label.small{display:block;}
+  #map.county-zoom .state-label,#map.county-zoom .state-label.small{display:none;}
   /* resolution notice shown at high zoom */
   #resnote{display:none;position:absolute;z-index:1200;top:62px;left:50%;transform:translateX(-50%);
     max-width:430px;background:rgba(251,241,221,.97);border:1px solid #ecdcbd;border-radius:8px;
@@ -195,7 +196,7 @@
   <p class="evidence-link"><a href="explorer.html" target="_blank" rel="noopener">See the evidence behind each factor</a></p>
   <div class="q">
    <div class="q-row"><label for="choice-drained">Is the land artificially drained?</label><button class="info" type="button" aria-label="About artificial drainage" aria-expanded="false" aria-controls="info-drained"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg></button>
-    <div id="info-drained" class="info-pop" hidden><p>NRCS rates soils as mapped, before any drainage. Artificial drainage removes free water from wet soils with tile, ditches or surface mounding. Choose Yes if the land has working drainage: the water table and ponding checks no longer describe it, so they are left out. NRCS itself says it is unknown whether a shallow water table affects how biochar works.</p><p><a href="https://www.nrcs.usda.gov/sites/default/files/2022-06/Soil%20Taxonomy.pdf" target="_blank" rel="noopener noreferrer">NRCS Soil Taxonomy</a> &middot; <a href="explorer.html#p-f-wt" target="_blank" rel="noopener">Evidence</a></p></div></div>
+    <div id="info-drained" class="info-pop" hidden><p>Mapped soil conditions may not reflect your field's current drainage, and some mapped soils already represent drained conditions. Artificial drainage removes free water from wet soils with tile, ditches or surface mounding. Choose Yes if the land has working drainage that the mapped soil does not already reflect: the water table and ponding checks are then left out. NRCS itself says it is unknown whether a shallow water table affects how biochar works.</p><p><a href="https://www.nrcs.usda.gov/sites/default/files/2022-06/Soil%20Taxonomy.pdf" target="_blank" rel="noopener noreferrer">NRCS Soil Taxonomy</a> &middot; <a href="explorer.html#p-f-wt" target="_blank" rel="noopener">Evidence</a></p></div></div>
    <select id="choice-drained"><option value="no">No</option><option value="yes">Yes</option></select>
   </div>
   <div class="q">
@@ -205,7 +206,7 @@
   </div>
   <div class="q">
    <div class="q-row"><label class="switch" for="choice-group1"><input id="choice-group1" type="checkbox" role="switch"><span>Leave out factors research doesn't link to biochar response.</span></label><button class="info" type="button" aria-label="About factors research doesn't link to biochar response" aria-expanded="false" aria-controls="info-group1"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg></button>
-    <div id="info-group1" class="info-pop" hidden><p>NRCS lowers the rating for steep slopes, flooding and rocky ground, and gives fewer points to shrink-swell clay. These affect how and when you apply biochar, but no study shows that they reduce what biochar does for the soil. Turn this on to leave all four out, or leave them out one at a time. Leaving out shrink-swell can lower a score as well as raise it.</p><p><a href="explorer.html#b-groups" target="_blank" rel="noopener">Evidence</a></p></div></div>
+    <div id="info-group1" class="info-pop" hidden><p>NRCS lowers the rating for steep slopes, flooding and rocky ground, and gives fewer points to shrink-swell clay. These affect how and when you apply biochar. No study validates these NRCS cutoffs, and the few that tested slope found mixed or no effects. Turn this on to leave all four out, or leave them out one at a time. Leaving out shrink-swell can lower a score as well as raise it.</p><p><a href="explorer.html#b-groups" target="_blank" rel="noopener">Evidence</a></p></div></div>
    <p id="group1-each-label" class="each-label">Or leave out one at a time:</p>
    <ul class="each" aria-labelledby="group1-each-label">
     <li class="q-row"><label><input type="checkbox" data-factor="slope"><span>Slope</span></label><button class="info" type="button" aria-label="About slope" aria-expanded="false" aria-controls="info-slope"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg></button><div id="info-slope" class="info-pop" hidden><p>Research summaries found biochar reduced erosion on average. Steep ground is about safe equipment and keeping biochar in place until it is worked in.</p></div></li>
@@ -217,7 +218,8 @@
   <button id="reset-nrcs" class="text-button" type="button" hidden>Reset to Default</button>
  </section>
  <div class="national-opacity"><label for="national-soil-opacity">Soil overlay opacity <output id="national-opacity-value">100%</output></label><input id="national-soil-opacity" type="range" min="0" max="100" value="100" aria-valuetext="100% soil colors"><p class="note">Move left to see aerial imagery.</p></div>
- <section aria-labelledby="acreage-title">
+ <button id="show-acreage" class="text-button" type="button" aria-expanded="false" aria-controls="acreage-section" hidden>Show state and county acreage</button>
+ <section id="acreage-section" aria-labelledby="acreage-title">
   <h3 id="acreage-title">Acreage</h3>
   <div class="area-controls"><div><label for="acreage-state">State</label><select id="acreage-state" disabled><option value="">Contiguous U.S.</option></select></div><div><label for="acreage-county">County or equivalent</label><select id="acreage-county" disabled><option value="">Select a state first</option></select></div></div>
   <h4 id="acreage-area-title">Contiguous U.S.</h4>
@@ -270,48 +272,43 @@
   if(initialLocation&&+initialLocation[1]>=-85&&+initialLocation[1]<=85&&+initialLocation[2]>=-180&&+initialLocation[2]<=180){initialCenter=[+initialLocation[1],+initialLocation[2]];initialZoom=Math.max(3,Math.min(15,+initialLocation[3]));}
   var map = L.map("map", { center: initialCenter, zoom: initialZoom, minZoom: 3, maxZoom: 15 });
 
-  // Base map without place names, and Esri's matching place-name layer above the soil colors, so
-  // town names stay readable at any soil opacity and never appear twice (October 11, 2026).
+  // Base map without place names. The map's only labels are state abbreviations (zooms 3 to 7) and
+  // county names (zoom 8 and closer), drawn by this page (October 12, 2026).
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
-    attribution: 'Base map and place names &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16
-  }).addTo(map);
-  map.createPane("placeLabelPane"); map.getPane("placeLabelPane").style.zIndex = 420; map.getPane("placeLabelPane").style.pointerEvents = "none";
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
-    pane: "placeLabelPane", maxZoom: 16
+    attribution: 'Base map &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors', maxZoom: 16
   }).addTo(map);
 
-  // ---- county outlines (zoom 7+) and county names (zoom 8+, in view only) ----
+  // ---- county outlines (zoom 7+, heavier as you zoom in) and county names (zoom 8+, in view only) ----
   map.createPane("countyPane");
   map.getPane("countyPane").style.zIndex = 350;
   var countyLayer = L.layerGroup();          // lines
   var countyLabelLayer = L.layerGroup();     // names
   var countyPoints = [], countiesLoaded = false;
   var STATE_ABBR = {"01":"AL","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT","10":"DE","11":"DC","12":"FL","13":"GA","16":"ID","17":"IL","18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD","25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE","32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND","39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD","47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV","55":"WI","56":"WY"};
-  var COUNTY_MIN_ZOOM = 7, COUNTY_LABEL_ZOOM = 9, COUNTY_LABEL_MAX_ZOOM = 11;
-  function bboxCenter(geom){
-    var mnx=180, mny=90, mxx=-180, mxy=-90;
-    (function scan(c){
-      if (typeof c[0] === "number"){ if(c[0]<mnx)mnx=c[0]; if(c[0]>mxx)mxx=c[0]; if(c[1]<mny)mny=c[1]; if(c[1]>mxy)mxy=c[1]; }
-      else { for (var i=0;i<c.length;i++) scan(c[i]); }
-    })(geom.coordinates);
-    return [(mny+mxy)/2, (mnx+mxx)/2];
+  var COUNTY_MIN_ZOOM = 7, COUNTY_LABEL_ZOOM = 8, COUNTY_LABEL_MAX_ZOOM = 15, countyLines = null, countyHalo = null;
+  // County lines get darker and wider as you zoom in; a white edge keeps them visible over soil colors and imagery.
+  function countyStyle(z){
+    if (z >= 12) return { line:{ color:"#1f1f1f", weight:1.9, opacity:0.95 }, halo:{ color:"#ffffff", weight:4.5, opacity:0.75 } };
+    if (z >= 10) return { line:{ color:"#2e2e2e", weight:1.4, opacity:0.9 }, halo:{ color:"#ffffff", weight:3.5, opacity:0.65 } };
+    if (z >= 8) return { line:{ color:"#3d3d3d", weight:1, opacity:0.8 }, halo:{ color:"#ffffff", weight:2.6, opacity:0.5 } };
+    return { line:{ color:"#555555", weight:0.6, opacity:0.6 }, halo:{ color:"#ffffff", weight:0, opacity:0 } };
   }
+  function restyleCounties(){ if (!countyLines) return; var st = countyStyle(map.getZoom()); countyHalo.setStyle(st.halo); countyLines.setStyle(st.line); }
   function loadCounties(){
     if (countiesLoaded) return;
     countiesLoaded = true;
     fetch("counties.geojson")
       .then(function(r){ return r.json(); })
       .then(function(gj){
-        L.geoJSON(gj, {
-          pane: "countyPane", interactive: false, renderer: L.canvas({ pane: "countyPane" }),
-          style: { color: "#6b6b6b", weight: 0.5, opacity: 0.4, fill: false }
-        }).addTo(countyLayer);
+        var renderer = L.canvas({ pane: "countyPane" }), st = countyStyle(map.getZoom());
+        countyHalo = L.geoJSON(gj, { pane: "countyPane", interactive: false, renderer: renderer, style: Object.assign({ fill: false }, st.halo) }).addTo(countyLayer);
+        countyLines = L.geoJSON(gj, { pane: "countyPane", interactive: false, renderer: renderer, style: Object.assign({ fill: false }, st.line) }).addTo(countyLayer);
         gj.features.forEach(function(f){
           var nm = f.properties && (f.properties.NAME || f.properties.name), type = f.properties && f.properties.LSAD;
-          // "Fairfax County" and "Fairfax (city)", so a county name never repeats a town name.
-          // Independent cities are towns, and the place-name layer already labels them.
+          // County names carry their type ("Fairfax County"). Independent cities are left unlabeled, so
+          // the only names on the map are states and counties.
           if (type === "city") nm = null; else if (nm && /^(County|Parish|Borough)$/.test(type || "")) nm += " " + type;
-          if (nm){ var ctr = bboxCenter(f.geometry); countyPoints.push({ name: nm, state: f.properties && f.properties.STATE, lat: ctr[0], lng: ctr[1] }); }
+          if (nm) countyPoints.push({ name: nm, state: f.properties && f.properties.STATE, feature: f, bbox: turf.bbox(f) });
         });
         updateCountyLabels();
       })
@@ -321,10 +318,16 @@
     countyLabelLayer.clearLayers();
     if (map.getZoom() < COUNTY_LABEL_ZOOM || map.getZoom() > COUNTY_LABEL_MAX_ZOOM){ if (map.hasLayer(countyLabelLayer)) map.removeLayer(countyLabelLayer); return; }
     if (!map.hasLayer(countyLabelLayer)) countyLabelLayer.addTo(map);
-    var b = map.getBounds(), inView = [], count = {};
+    // Each label goes inside the visible part of its county, so the county you are looking at is named
+    // even when its center is off screen, and a label never lands in a hole (an independent city).
+    var b = map.getBounds(), view = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], inView = [], count = {};
     for (var i=0; i<countyPoints.length && inView.length<150; i++){
-      var p = countyPoints[i];
-      if (b.contains([p.lat, p.lng])){ inView.push(p); count[p.name] = (count[p.name] || 0) + 1; }
+      var p = countyPoints[i], bb = p.bbox;
+      if (bb[0] > view[2] || bb[2] < view[0] || bb[1] > view[3] || bb[3] < view[1]) continue;
+      var anchor = null;
+      try { var part = turf.bboxClip(p.feature, view); if (turf.area(part) > 0) anchor = turf.pointOnFeature(part).geometry.coordinates; } catch (e) {}
+      if (!anchor) continue;
+      inView.push({ name: p.name, state: p.state, lat: anchor[1], lng: anchor[0] }); count[p.name] = (count[p.name] || 0) + 1;
     }
     // Different counties can share a name across a state line (Frederick County, MD and VA); add the
     // state so no name appears twice.
@@ -335,7 +338,7 @@
     });
   }
   function updateCounties(){
-    if (map.getZoom() >= COUNTY_MIN_ZOOM){ loadCounties(); if (!map.hasLayer(countyLayer)) countyLayer.addTo(map); }
+    if (map.getZoom() >= COUNTY_MIN_ZOOM){ loadCounties(); if (!map.hasLayer(countyLayer)) countyLayer.addTo(map); restyleCounties(); }
     else if (map.hasLayer(countyLayer)) { map.removeLayer(countyLayer); }
     updateCountyLabels();
   }
@@ -343,10 +346,11 @@
   // Water shapes and names stay above the soil and aerial imagery.
   map.createPane("linePane"); map.getPane("linePane").style.zIndex = 385;
   var hydro = createNationalWaterLayers(map);
-  var waterLayer = hydro.water.addTo(map);
-  var majorRiversLayer = hydro.rivers.addTo(map);
-  // interstates: lazy-load Natural Earth roads once zoomed in, keep the I-routes
-  var interstateLayer = L.layerGroup().addTo(map);
+  // Rivers, lakes and Interstates start switched off (October 12, 2026); visitors can turn them on.
+  var waterLayer = hydro.water;
+  var majorRiversLayer = hydro.rivers;
+  // interstates: loaded the first time the layer is switched on
+  var interstateLayer = L.layerGroup();
   var interstatesLoaded = false;
   function loadInterstates(){
     if (interstatesLoaded) return; interstatesLoaded = true;
@@ -395,11 +399,12 @@
   function onZoom(){
     var el = map.getContainer();
     if (map.getZoom() >= 6) el.classList.add("zoomed-in"); else el.classList.remove("zoomed-in");
+    if (map.getZoom() >= COUNTY_LABEL_ZOOM) el.classList.add("county-zoom"); else el.classList.remove("county-zoom");
     updateCounties();
-    if (map.getZoom() >= 5) loadInterstates();
     document.getElementById("resnote").style.display = (map.getZoom() >= 12) ? "block" : "none";
   }
   function onMove(){ updateCountyLabels(); }
+  map.on("overlayadd", function(e){ if (e.layer === interstateLayer) loadInterstates(); });
   map.on("zoomend", onZoom); map.on("moveend", onMove); onZoom();
 
   // overlay toggles (top-right); counties appear automatically when zoomed in
@@ -430,6 +435,6 @@
 <script src="biochar_engine.js?v=20261011-fields"></script>
 <script src="insights.js?v=20261011-fields"></script>
 <script src="uploads.js?v=20261012-audit"></script>
-<script src="fields.js?v=20261012-audit"></script>
+<script src="fields.js?v=20261012-fieldmode"></script>
 </body>
 </html>
