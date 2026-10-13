@@ -34,19 +34,23 @@
  }
  // Field mode: while the field tool is open or fields exist, the state, county and current-view acreage
  // collapse so the panel shows only field totals; a link reopens it (October 12, 2026).
- const acreageSection=$('acreage-section'),showAcreage=$('show-acreage');
+ // "Your fields" in the panel appears only in field mode; the button that opens the tool is at the top of the map.
+ const acreageSection=$('acreage-section'),showAcreage=$('show-acreage'),launcher=$('field-launcher');
  function setFieldMode(on){
-  acreageSection.hidden=on;showAcreage.hidden=!on;
+  acreageSection.hidden=on;showAcreage.hidden=!on;$('fields-section').hidden=!on;
   showAcreage.setAttribute('aria-expanded','false');showAcreage.textContent='Show state and county acreage';
  }
  function leaveFieldModeIfEmpty(){if(!fields.length&&toolbar.hidden)setFieldMode(false);}
  showAcreage.addEventListener('click',()=>{const open=acreageSection.hidden;acreageSection.hidden=!open;showAcreage.setAttribute('aria-expanded',String(open));showAcreage.textContent=open?'Hide state and county acreage':'Show state and county acreage';});
  $('select-fields').disabled=false;
- $('select-fields').addEventListener('click',()=>{M.setOpacity(0);toolbar.hidden=false;setFieldMode(true);$('fields-title').scrollIntoView({block:'start'});setHint('Find a place by address, then draw a field or upload field boundaries. Add as many fields as you need.');if(window.abiAddressSearch)window.abiAddressSearch.focus();else $('draw-field').focus();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!launcher.hidden)launcher.classList.add('tip-off');});
+ launcher.addEventListener('mouseleave',()=>launcher.classList.remove('tip-off'));
+ $('select-fields').addEventListener('blur',()=>launcher.classList.remove('tip-off'));
+ $('select-fields').addEventListener('click',()=>{M.setOpacity(0);launcher.hidden=true;toolbar.hidden=false;setFieldMode(true);$('fields-title').scrollIntoView({block:'start'});setHint('Find a place by address, then draw a field or upload field boundaries. Add as many fields as you need.');if(window.abiAddressSearch)window.abiAddressSearch.focus();else $('draw-field').focus();});
  $('draw-field').addEventListener('click',()=>draw('polygon'));
  $('draw-rect').addEventListener('click',()=>draw('rectangle'));
  $('upload-fields').addEventListener('click',()=>fileInput.click());
- $('fields-done').addEventListener('click',()=>{stopDrawing();if(window.abiAddressSearch)window.abiAddressSearch.reset();toolbar.hidden=true;leaveFieldModeIfEmpty();$('select-fields').focus();});
+ $('fields-done').addEventListener('click',()=>{stopDrawing();if(window.abiAddressSearch)window.abiAddressSearch.reset();toolbar.hidden=true;launcher.hidden=false;leaveFieldModeIfEmpty();$('select-fields').focus();});
  map.on('draw:drawstop',()=>{for(const id of ['draw-field','draw-rect'])$(id).setAttribute('aria-pressed','false');drawer=null;});
  map.on('draw:created',e=>{stopDrawing();const f=addField(e.layer.toGeoJSON().geometry,null);setHint(f.name+' added. Draw another field, upload boundaries, or press Done.');});
 
