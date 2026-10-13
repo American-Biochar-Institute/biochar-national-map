@@ -474,6 +474,7 @@ body.tips-off .infobtn + .infotip{display:none !important;}
   <div class="parthead">
     <div class="eyebrow">What the data show</div>
     <h2>What drives ratings today, and what research says</h2>
+    <p class="sub"><strong>Why Michigan?</strong> A statewide soil-survey dataset was available for checking the calculations against published NRCS ratings and showing how different settings change them. We use Michigan as a worked example. These are calculations from mapped soils, not Michigan biochar field-trial results. The Michigan percentages count soil components, not acres; they are not national estimates.</p>
   </div>
 
   <section class="panel" id="b-fig1">
@@ -582,7 +583,8 @@ body.tips-off .infobtn + .infotip{display:none !important;}
   <div class="parthead" id="p-part4">
     <div class="eyebrow">Part 4</div>
     <h2>What limits ratings on the ground</h2>
-    <p class="sub">All 34,821 rated Michigan soil components (SSURGO export, August 2023), run through the Institute's engine. Shares are of components, not acres. A national figure from the Institute's map draft gives scale.</p>
+    <p class="sub">All 34,821 rated Michigan soil components (SSURGO export, August 2023), run through the Institute's engine. Shares are of components, not acres. A separate national map figure gives scale.</p>
+    <p class="sub"><strong>Why Michigan?</strong> A statewide soil-survey dataset was available for checking the calculations against published NRCS ratings and showing how different settings change them. We use Michigan as a worked example. These are calculations from mapped soils, not Michigan biochar field-trial results. The Michigan percentages count soil components, not acres; they are not national estimates.</p>
   </div>
   <section class="panel" id="p-fig1">
     <h2>Which factor sets the rating</h2>
@@ -1626,7 +1628,7 @@ function initPro(){
   $("#p-stamp").textContent = "Evidence: 104-study review (October 2026) and a sweep of the Institute's BIOCHAR library, library state " + M.libraryState + " · Source supplement: " + M.sourceReview.date + " · Michigan: 34,821 components, SSURGO August 2023 · Engine v1.1";
   var cards = [
     { l: "What sets ratings", v: pct(M.mi.governed.site), t: "of Michigan components have their rating set by a site factor rather than the soil-property points.", foot: pct(M.mi.classes.nrcs.neg) + " rate Negligible; water table binds for " + pct(M.mi.siteLimits.wt) + "." },
-    { l: "Cutoffs tested", v: "0 of 104", t: "reviewed studies test an NRCS breakpoint. The evidence speaks to direction and context, not thresholds.", foot: "No inspected supplemental paper validates a breakpoint." },
+    { l: "Exact NRCS scoring values", v: "0 of 104", t: "reviewed studies confirmed the exact values NRCS uses to assign points, such as pH 5.5 and 7.5.", foot: "We keep these values to reproduce the NRCS rating; they are not proven limits on biochar benefits. The additional reviewed papers did not confirm them either." },
     { l: "Soil properties", v: "+45% vs +14%", t: "gain in plant-available water from biochar in coarse versus fine soils; yield gains concentrate in acidic, low-fertility soils.", foot: "Razzaghi et al. 2020; Jeffery et al. 2017; Xu et al. 2025." },
     { l: "Drained land", v: pct(M.mi.changedClass.drained), t: "of Michigan components change class when the land is treated as artificially drained (water table and ponding off).", foot: "Negligible falls from " + pct(M.mi.classes.nrcs.neg) + " to " + pct(M.mi.classes.drained.neg) + "; the mapped condition may not reflect current drainage." }
   ];
