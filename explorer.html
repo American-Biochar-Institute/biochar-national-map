@@ -399,6 +399,8 @@ table.matrix td.ass{min-width:220px;}
 :root{--g3ink:#262903; --partink:#fff;}
 :root[data-theme="light"]{--g3ink:#fff; --partink:#262903;}
 body.tips-off .infobtn + .infotip{display:none !important;}
+.fpanel .kv2{border:1px solid var(--soft-line); border-radius:10px; background:var(--soft-bg); padding:10px 14px;}
+.fpanel .kv2 + h3{border-top:1px solid var(--line); padding-top:14px; margin-top:18px !important;}
 
 </style></head>
 <body>
@@ -560,14 +562,14 @@ body.tips-off .infobtn + .infotip{display:none !important;}
   <div class="parthead" id="p-part2">
     <div class="eyebrow">Part 2</div>
     <h2>Three groups, with a working score</h2>
-    <p class="sub">The Institute's grouping of the 13 factors from the evidence in Part 3. Pick a Michigan soil component, switch factors off or enter measured values, and compare the result with the published NRCS rating. A switched-off site factor is treated as non-limiting (grade 1.0). A switched-off soil property is left out, and the properties still on share the points (0.15 &times; 7 / number on), so the all-on score still equals the NRCS rating and switching a property off can lower a score as well as raise it. The Institute's national map uses the same rules and the same drainage question. The adjusted score is an exploratory ABI calculation, not an NRCS rating.</p>
+    <p class="sub">The Institute's grouping of the 13 factors from the evidence in Part 3. Pick a Michigan soil component, switch factors off or enter measured values, and compare the result with the published NRCS rating. A switched-off site factor is treated as non-limiting (grade 1.0). A switched-off soil property is left out, and the properties still on share the points (0.15 &times; 7 / number on), so the all-on score still equals the NRCS rating and switching a property off can lower a score as well as raise it. The Institute's national map uses the same rules and the same drainage question. The adjusted score is an exploratory calculation by the Institute, not an NRCS rating.</p>
   </div>
   <div id="p-scen"></div>
 
   <div class="parthead" id="p-part3">
     <div class="eyebrow">Part 3</div>
     <h2>Evidence by factor</h2>
-    <p class="sub">For each factor: what NRCS assumes, what the reviewed literature and the Institute's library show, and the evidence strength. Bracketed IDs link to the references. "Reviewed" studies are the 104 in the October 2026 literature review; other citations are ABI library papers read for this explorer.</p>
+    <p class="sub">For each factor: what NRCS assumes, what the reviewed literature and the Institute's library show, and the evidence strength. Bracketed IDs link to the references. "Reviewed" studies are the 104 in the October 2026 literature review; other citations are papers in the Institute's library read for this explorer.</p>
   </div>
   <div class="controls" id="p-filters">
     <div class="cgroup"><span class="clabel">Group</span><div class="chips" id="p-fgroup"></div></div>
@@ -619,7 +621,7 @@ body.tips-off .infobtn + .infotip{display:none !important;}
 
   <section class="panel" id="p-refs">
     <h2>References</h2>
-    <p class="sub">Reviewed studies keep their review IDs (S01 to S104). Other entries are ABI BIOCHAR library papers, marked by Zotero key. <span id="refCount"></span></p>
+    <p class="sub">Reviewed studies keep their review IDs (S01 to S104). Other entries are papers in the Institute's BIOCHAR library, marked by Zotero key. <span id="refCount"></span></p>
     <ol class="refs" id="refList"></ol>
   </section>
   </section>
@@ -1754,7 +1756,7 @@ window.MODEL = {
      ]
     },
     {
-     "t": "Artificial drainage (surface mounding, ditches or subsurface tile) removes free water and changes the water table for a land use. NRCS ratings describe the native, undrained condition, so on drained land the mapped water table overstates the limit.",
+     "t": "Artificial drainage (surface mounding, ditches or subsurface tile) removes free water and changes the water table for a land use. Mapped conditions may not reflect a field's current drainage, so on drained land the mapped water table can overstate the limit.",
      "c": [
       "TAXONOMY"
      ]
@@ -1855,7 +1857,7 @@ window.MODEL = {
      ]
     },
     {
-     "t": "Artificial drainage removes free water from wet soils, so a mapped ponding class describes the undrained condition.",
+     "t": "Artificial drainage removes free water from wet soils, so a mapped ponding class may not describe a drained field.",
      "c": [
       "TAXONOMY"
      ]
@@ -2908,7 +2910,7 @@ function makeScenario(root, level){
     SOILS.map(function(s, i){ return '<option value="' + i + '">' + esc(s.comp.compname + " (" + s.muname + ")") + '<\/option>'; }).join("") + '<\/select><\/div>');
   h.push('<div class="scorebox"><span class="slab">NRCS published<\/span><span class="srow"><span class="sval" id="' + P + '-nrcs"><\/span><span id="' + P + '-nrcsc"><\/span><\/span><\/div>');
   h.push('<span class="scenarrow" aria-hidden="true">&rarr;<\/span>');
-  h.push('<div class="scorebox you"><span class="slab">' + (level === "pro" ? "ABI adjusted score" : "Your adjusted score") + '<\/span><span class="srow"><span class="sval" id="' + P + '-you" aria-live="polite"><\/span><span id="' + P + '-youc"><\/span><\/span><\/div>');
+  h.push('<div class="scorebox you"><span class="slab">' + (level === "pro" ? "Institute adjusted score" : "Your adjusted score") + '<\/span><span class="srow"><span class="sval" id="' + P + '-you" aria-live="polite"><\/span><span id="' + P + '-youc"><\/span><\/span><\/div>');
   h.push('<div class="scenbtns"><button type="button" class="chip" data-act="g1">Switch off Group 1<\/button><button type="button" class="chip" data-act="reset">Reset to NRCS<\/button><\/div>');
   h.push('<\/div>');
   h.push('<p class="scennote" id="' + P + '-note"><\/p>');
@@ -3186,18 +3188,18 @@ function initBasics(){
     "The rule and its cutoffs: the NRCS rule definition in the National Soil Information System (NASIS), as reconstructed and checked by the Institute against 34,821 published Michigan ratings.",
     "The evidence: a review of 104 studies completed in October 2026, plus papers found by a full-text search of the Institute's research library (library state " + M.libraryState.split(" (")[0] + ").",
     "Michigan figures: SSURGO soil survey data (August 2023 export), run through the Institute's rating engine.",
-    "National figure: the Institute's national map draft, NRCS published ratings for the lower 48 states."
+    "National figure: the Institute's national map, NRCS published ratings for the lower 48 states."
   ].map(function(t){ return "<li>" + esc(t) + "<\/li>"; }).join("") + '<li>Map your own fields with the shared drainage, pH and Group 1 choices (this page offers more soil-property switches) on the Institute\'s <a href="https://american-biochar-institute.github.io/biochar-national-map/" target="_blank" rel="noopener">national map<\/a>.<\/li>';
 }
 
 /* ---------- For Ag Professionals ---------- */
 function initPro(){
-  $("#p-stamp").textContent = "Evidence: 104-study review (October 2026) and ABI BIOCHAR library sweep, library state " + M.libraryState + " · Michigan: 34,821 components, SSURGO August 2023 · Engine v1.1";
+  $("#p-stamp").textContent = "Evidence: 104-study review (October 2026) and a sweep of the Institute's BIOCHAR library, library state " + M.libraryState + " · Michigan: 34,821 components, SSURGO August 2023 · Engine v1.1";
   var cards = [
     { l: "What sets ratings", v: pct(M.mi.governed.site), t: "of Michigan components have their rating set by a site factor rather than the soil-property points.", foot: pct(M.mi.classes.nrcs.neg) + " rate Negligible; water table binds for " + pct(M.mi.siteLimits.wt) + "." },
     { l: "Cutoffs tested", v: "0 of 104", t: "reviewed studies test an NRCS breakpoint. The evidence speaks to direction and context, not thresholds.", foot: "Also true of the library papers read for this explorer." },
     { l: "Soil properties", v: "+45% vs +14%", t: "gain in plant-available water from biochar in coarse versus fine soils; yield gains concentrate in acidic, low-fertility soils.", foot: "Razzaghi et al. 2020; Jeffery et al. 2017; Xu et al. 2025." },
-    { l: "Drained land", v: pct(M.mi.changedClass.drained), t: "of Michigan components change class when the land is treated as artificially drained (water table and ponding off).", foot: "Negligible falls from " + pct(M.mi.classes.nrcs.neg) + " to " + pct(M.mi.classes.drained.neg) + "; NRCS rates the undrained condition." }
+    { l: "Drained land", v: pct(M.mi.changedClass.drained), t: "of Michigan components change class when the land is treated as artificially drained (water table and ponding off).", foot: "Negligible falls from " + pct(M.mi.classes.nrcs.neg) + " to " + pct(M.mi.classes.drained.neg) + "; the mapped condition may not reflect current drainage." }
   ];
   $("#p-keygrid").innerHTML = cards.map(function(c, i){ return '<div class="kcard"><span class="kbadge">' + (i + 1) + '<\/span><span class="klabel">' + esc(c.l) + '<\/span><div class="kvals"><span class="kv"><b>' + esc(c.v) + '<\/b><\/span><\/div><p class="ktext">' + esc(c.t) + '<\/p><p class="kfoot">' + esc(c.foot) + '<\/p><\/div>'; }).join("");
   drawCurves();
@@ -3240,15 +3242,15 @@ function initPro(){
   applyFilters();
   // Part 4
   barChart($("#p-chart1"), siteItems(), { label: "Share of Michigan components whose rating is set by each factor" });
-  $("#p-note1").innerHTML = "<strong>Note.<\/strong> Site factors bind for " + pct(M.mi.governed.site) + " of components and the soil-property sum for " + pct(M.mi.governed.dynamic) + ". Water table and ponding often tie at 0 on poorly drained soils. Karst does not occur in the Michigan data. Nationally (lower 48, 30 m cells), " + f1(natNegPct) + "% of rated acres rate Negligible (" + commas(NAT.neg) + " of " + commas(NAT.rated) + " acres; ABI national map draft, read October 10, 2026).";
+  $("#p-note1").innerHTML = "<strong>Note.<\/strong> Site factors bind for " + pct(M.mi.governed.site) + " of components and the soil-property sum for " + pct(M.mi.governed.dynamic) + ". Water table and ponding often tie at 0 on poorly drained soils. Karst does not occur in the Michigan data. Nationally (lower 48, 30 m cells), " + f1(natNegPct) + "% of rated acres rate Negligible (" + commas(NAT.neg) + " of " + commas(NAT.rated) + " acres; the Institute's national map, read October 10, 2026).";
   stackChart($("#p-chart2"), scenRows(), "Michigan components by class under four settings"); classLegend($("#p-legend2"));
   var mp = M.mi.mapPolicy;
-  $("#p-note2").innerHTML = "<strong>Note.<\/strong> Drained changes the class of " + pct(M.mi.changedClass.drained) + " of components, Group 1 off " + pct(M.mi.changedClass.g1off) + ", and both " + pct(M.mi.changedClass.g1dr) + ". Switched-off soil properties are left out and the rest rescaled; because " + pct(M.mi.dyn.lep.full) + " of components earn full LEP points, leaving LEP out lowers some scores. For comparison, on the national map, answering Yes to drainage and leaving out slope, flooding, and cobbles and stones (shrink-swell kept) gives " + pct(mp.drained.classes.neg) + " Negligible and a mean of " + f3(mp.drained.mean) + " for these components; leaving out the same three without drainage gives " + pct(mp.notDrained.classes.neg) + " and " + f3(mp.notDrained.mean) + ". SSURGO does not record drainage, so the drained bars bound what is possible.";
+  $("#p-note2").innerHTML = "<strong>Note.<\/strong> Drained changes the class of " + pct(M.mi.changedClass.drained) + " of components, Group 1 off " + pct(M.mi.changedClass.g1off) + ", and both " + pct(M.mi.changedClass.g1dr) + ". Switched-off soil properties are left out and the rest rescaled; because " + pct(M.mi.dyn.lep.full) + " of components earn full LEP points, leaving LEP out lowers some scores. For comparison, on the national map, answering Yes to drainage and leaving out slope, flooding, and cobbles and stones (shrink-swell kept) gives " + pct(mp.drained.classes.neg) + " Negligible and a mean of " + f3(mp.drained.mean) + " for these components; leaving out the same three without drainage gives " + pct(mp.notDrained.classes.neg) + " and " + f3(mp.notDrained.mean) + ". SSURGO does not say whether a particular field is drained today, so the drained bars bound what is possible.";
   dynChart();
   $("#p-note3").innerHTML = "<strong>Note.<\/strong> The density ratio gives no points to " + pct(M.mi.dyn.bd.none) + " of components, so it rarely adds to Michigan ratings; pH, CEC and LEP usually give full or near-full points. Unstored values are calibrated to the published rating, so individual property shares carry that approximation.";
   // Part 5
   var S = M.sweep;
-  $("#p-libsub").textContent = "Full-text keyword sweep of the Institute's ABI BIOCHAR library (abi-library-sweep), library state " + M.libraryState + ". The sweep read " + commas(S.papers) + " papers with readable text; " + S.noFile + " library items have no readable file and sit outside it.";
+  $("#p-libsub").textContent = "Full-text keyword sweep of the Institute's BIOCHAR research library, library state " + M.libraryState + ". The sweep read " + commas(S.papers) + " papers with readable text; " + S.noFile + " library items have no readable file and sit outside it.";
   $("#p-libtable").innerHTML = '<thead><tr><th>Factor<\/th><th>Keyword signal (full text)<\/th><th class="num">Library papers matching<\/th><th class="num">Of these, in the review<\/th><th>Next to screen<\/th><\/tr><\/thead><tbody>' +
     S.rows.map(function(r){ var f = F[r.f]; var nxt = (f.libNext || []).filter(function(k){ return M.extra[k] && !M.extra[k].read; });
       return '<tr><td style="color:var(--ink);font-weight:600">' + esc(f.name) + '<\/td><td>' + esc(r.signal) + (r.broad ? ' <span class="pill">broad signal<\/span>' : '') + '<\/td><td class="num">' + commas(r.total) + '<\/td><td class="num">' + r.inReview + '<\/td><td>' + (nxt.length ? nxt.map(function(k){ return '<a class="srclink" href="#ref-' + k + '">' + esc(refLabel(k)) + '<\/a>'; }).join("; ") : '<span class="muted">None found among top-ranked hits<\/span>') + '<\/td><\/tr>'; }).join("") + '<\/tbody>';
@@ -3326,7 +3328,7 @@ function shell(){
   if (location.hash.length > 1) { var id = decodeURIComponent(location.hash.slice(1)); if (VIEWS.indexOf(id) > -1) showView(id, false); else reveal(id); }
   var contact = 'See it on a map: <a href="https://american-biochar-institute.github.io/biochar-national-map/" target="_blank" rel="noopener">the Institute\'s national map<\/a>. Questions or corrections: <a href="mailto:feedback@biochar.org">feedback@biochar.org<\/a>.';
   $("#g-foot").innerHTML = 'American Biochar Institute, Portland, Oregon · <a href="https://biochar.org" target="_blank" rel="noopener">biochar.org<\/a>. The NRCS rating is published by USDA-NRCS; the adjusted scores on this page are the Institute\'s exploratory calculations, not NRCS ratings. ' + contact;
-  $("#foot").innerHTML = 'American Biochar Institute, Portland, Oregon · <a href="https://biochar.org" target="_blank" rel="noopener">biochar.org<\/a>. Method: rule reconstructed from the NASIS schematic and criteria report and validated against published SSURGO ratings (engine v1.1); evidence from the October 2026 104-study review and an ABI BIOCHAR library sweep (library state ' + esc(M.libraryState.split(" (")[0]) + '). Adjusted scores are exploratory ABI calculations, not NRCS ratings, and do not establish program eligibility. ' + contact;
+  $("#foot").innerHTML = 'American Biochar Institute, Portland, Oregon · <a href="https://biochar.org" target="_blank" rel="noopener">biochar.org<\/a>. Method: rule reconstructed from the NASIS schematic and criteria report and validated against published SSURGO ratings (engine v1.1); evidence from the October 2026 104-study review and a sweep of the Institute\'s BIOCHAR library (library state ' + esc(M.libraryState.split(" (")[0]) + '). Adjusted scores are exploratory calculations by the Institute, not NRCS ratings, and do not establish program eligibility. ' + contact;
 }
 
 initBasics();
