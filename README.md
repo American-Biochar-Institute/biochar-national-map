@@ -21,7 +21,8 @@ A public map of the USDA-NRCS soil interpretation **SOH - Dynamic Soil Propertie
 
 - The default view draws the published NRCS class layer. Any other choice scores all 323,322 map units in the browser (`index-grid.js`, `acreage-worker.js`) and recolors the map from the index grid.
 - National, state and county acres are exact counts of 30 m cells. Field acres come from the soil boundaries clipped to the field.
-- Base map: Esri Light Gray Canvas (no place names). Labels: state abbreviations at national zooms, county names from zoom 8. Water (off by default): Natural Earth. Interstates (off by default): Natural Earth 10m roads. Aerial imagery: Esri.
+- Base map: Esri Light Gray Canvas (no place names). Labels: state abbreviations at national zooms, county names from zoom 8. Water (off by default): Natural Earth. Interstates (off by default): Natural Earth 10m roads. Aerial imagery: Esri. The map zooms to level 18.
+- Address search: Esri World Geocoding Service, with suggestions as you type; a chosen address is marked with a blue pin and shown at zoom 17. Searches are not stored.
 
 ## Publishing
 

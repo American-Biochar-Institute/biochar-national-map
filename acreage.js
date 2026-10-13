@@ -71,7 +71,7 @@
   const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
   paint(canvas,coords).then(()=>done(null,canvas),e=>{failure=e.message;status.textContent='Soil colors unavailable: '+e.message;done(e,canvas);});return canvas;
  }});
- const soil=new SoilLayer({pane:'nationalSoilPane',opacity:1,maxZoom:15,maxNativeZoom:14,attribution:'Biochar response; USDA-NRCS soil data; native 30 m grid'});
+ const soil=new SoilLayer({pane:'nationalSoilPane',opacity:1,maxZoom:18,maxNativeZoom:14,attribution:'Biochar response; USDA-NRCS soil data; native 30 m grid'});
  function recolor(){
   const jobs=[];
   for(const key in soil._tiles){const t=soil._tiles[key];if(t.el&&t.coords)jobs.push(paint(t.el,t.coords).catch(e=>{failure=e.message;}));}
