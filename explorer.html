@@ -367,7 +367,7 @@ table.matrix td.ass{min-width:220px;}
 .dir-yes{color:var(--card-value);} .dir-yes i{background:var(--g3);}
 .dir-depends{color:var(--ink);} .dir-depends i{background:var(--g2);}
 .dir-no{color:var(--ink);} .dir-no i{background:transparent; border:2px solid var(--g2);}
-.dir-untested{color:var(--muted);} .dir-untested i{background:transparent; border:2px dashed var(--muted);}
+.dir-untested{color:var(--muted); white-space:normal; max-width:260px;} .dir-untested i{background:transparent; border:2px dashed var(--muted); flex-shrink:0;}
 /* curves */
 .curvegrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px;}
 .cpanel{border:1px solid var(--line2); border-top:4px solid var(--gc); border-radius:12px; padding:10px 12px 8px; background:var(--tint);}
@@ -389,6 +389,7 @@ table.matrix td.ass{min-width:220px;}
 .cite{white-space:normal;}
 
 .pill{white-space:nowrap;}
+.fpanel .pill.direction{max-width:100%; white-space:normal; overflow-wrap:anywhere;}
 .finput label{flex-basis:100%;}
 .drainq{background:var(--tint); border:1px solid var(--line2); border-radius:12px; padding:10px 12px; margin:10px 0 6px;}
 .dq-row{display:flex; align-items:center; gap:6px; font-weight:600; font-size:14px; color:var(--ink); margin-bottom:6px;}
@@ -492,7 +493,7 @@ body.tips-off .infobtn + .infotip{display:none !important;}
 
   <section class="panel" id="b-fig3">
     <h2>What research says about each factor</h2>
-    <p class="sub">Does research support the way NRCS treats each factor? <strong>Supported</strong> means studies point the same way as the rating. <strong>Depends on your field or goal</strong> means it holds for some fields or goals and not others, for example drained land. <strong>Not supported</strong> means studies point the other way. <strong>Not tested</strong> means no reviewed study looked. One answer is the same for every factor, so it is not a column: no reviewed study validates the exact cutoffs NRCS uses, such as pH 5.5 and 7.5 or slopes of 6% and 15%. Research speaks to the direction of each effect, not to where the lines sit.</p>
+    <p class="sub">Does research support the way NRCS treats each factor? <strong>Supported</strong> means studies point the same way as the rating. <strong>Depends on your field or goal</strong> means it holds for some fields or goals and not others, for example drained land. <strong>Not supported</strong> means studies point the other way. <strong>Rating rule not validated by reviewed studies</strong> means the reviewed research does not establish that the factor should lower biochar response as the NRCS rule prescribes. Related published results may exist. One answer is the same for every factor, so it is not a column: no reviewed study validates the exact cutoffs NRCS uses, such as pH 5.5 and 7.5 or slopes of 6% and 15%. Research speaks to the direction of each effect, not to where the lines sit.</p>
     <div class="scroller" id="b-matrix"></div>
     <p class="note">Evidence: <strong>established</strong> means several research summaries agree; <strong>emerging</strong> means a few studies or summaries with mixed results; <strong>thin</strong> means little or no direct study. </p>
   </section>
@@ -640,6 +641,7 @@ body.tips-off .infobtn + .infotip{display:none !important;}
     <p class="foot" id="g-foot"></p>
   </footer>
 </div>
+
 <script>
 /*
  * biochar_engine.js  (v1.1, October 2026)
@@ -1266,7 +1268,7 @@ var commas = function(n){ return Math.round(n).toLocaleString("en-US"); };
 function clsOf(r){ if (r == null) return null; return r <= 0 ? "neg" : r <= 0.25 ? "low" : r <= 0.5 ? "fair" : r <= 0.75 ? "good" : "exc"; }
 function badge(r){ var k = clsOf(r); if (!k) return ""; return '<span class="clsbadge"><i style="background:' + CLS[k].color + '"><\/i>' + CLS[k].name + '<\/span>'; }
 var STR = { established: "Established", emerging: "Emerging", thin: "Thin" };
-var DIR = { yes: "Supported", depends: "Depends on your field or goal", no: "Not supported", untested: "Not tested" };
+var DIR = { yes: "Supported", depends: "Depends on your field or goal", no: "Not supported", untested: "Rating rule not validated by reviewed studies" };
 function strPill(s){ return '<span class="pill str str-' + s + '">' + STR[s] + ' evidence<\/span>'; }
 function grpPill(g){ return '<span class="pill grp grp' + g + '">Group ' + g + '<\/span>'; }
 
@@ -1651,7 +1653,7 @@ function initPro(){
       : "Full points for " + pct(M.mi.dyn[f.key].full) + " of Michigan components, no points for " + pct(M.mi.dyn[f.key].none) + " (mean grade " + f2(M.mi.dyn[f.key].mean) + ").";
     var nxt = (f.libNext || []).filter(function(k){ return M.extra[k] && !M.extra[k].read; });
     return '<section class="panel fpanel g' + f.group + '" id="p-f-' + f.key + '" data-g="' + f.group + '" data-s="' + f.strength + '">' +
-      '<div class="pills">' + grpPill(f.group) + strPill(f.strength) + '<span class="pill str">Direction: ' + DIR[f.dir] + '<\/span><span class="pill str">' + (f.kind === "site" ? "Site factor" : "Dynamic property, 0.15") + '<\/span><\/div>' +
+      '<div class="pills">' + grpPill(f.group) + strPill(f.strength) + '<span class="pill str direction">Direction: ' + DIR[f.dir] + '<\/span><span class="pill str">' + (f.kind === "site" ? "Site factor" : "Dynamic property, 0.15") + '<\/span><\/div>' +
       '<h2>' + esc(f.name) + '<\/h2><p class="tech">' + esc(f.tech) + '<\/p>' +
       '<dl class="kv2"><dt>NRCS assumes<\/dt><dd>' + esc(f.assume) + '<\/dd><dt>NRCS rule<\/dt><dd>' + esc(f.rule) + '<\/dd><dt>Literature review treatment<\/dt><dd>' + esc(f.treatment) + '<\/dd><dt>Michigan<\/dt><dd>' + esc(mi) + '<\/dd><\/dl>' +
       '<h3 style="margin-top:14px">What the evidence shows<\/h3><ul class="ev">' + f.evidence.map(function(e){ return '<li>' + esc(e.t) + cites(e.c) + '<\/li>'; }).join("") + '<\/ul>' +
