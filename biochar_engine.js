@@ -128,7 +128,7 @@
       },
       fromInputs: function (v) { return { prop: isNum(v.frag75) ? +v.frag75 : 0, extra: { stone250: isNum(v.stone250) ? +v.stone250 : 0 } }; } },
     { key: "karst", group: "site", name: "SOH - Karst landform", label: "Karst",
-      criteria: "Sinkholes present, or map unit name contains 'karst' = poorly suited.",
+      criteria: "Map unit name contains 'karst', and sinkholes listed or no landform data = poorly suited.",
       inputs: [{ id: "cls", label: "Karst present?", type: "select", options: ["No", "Yes"] }],
       prop: function (p) { return p.karst; }, propUnit: "",
       curve: function (x) { return x === null || x === undefined ? 1 : (x ? 0 : 1); },
@@ -222,7 +222,7 @@
     cobble: "Max fragment volume >=75 mm in 0-30 cm and surface cover of stones >=250 mm; lower of the two. Matches about 97%.",
     flood: "Most frequent monthly flooding class. Rare = 0.6, occasional = 0.2, frequent = 0.",
     pond: "Most frequent monthly ponding class. Rare = 0.17, occasional or frequent = 0.",
-    karst: "Sinkhole landform or 'karst' in the map unit name."
+    karst: "'Karst' in the map unit name, with sinkholes listed or no landform data."
   };
 
   // ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ A public map of the USDA-NRCS soil interpretation **SOH - Dynamic Soil Propertie
 ## What the map does
 
 - **Starts with the NRCS rating.** With the default choices, every soil shows its published NRCS rating.
-- **Adjusted score (optional).** Three controls change it: whether the land is artificially drained, whether the biochar has a meaningful liming value, and whether to leave out factors research does not link to biochar response (slope, flooding, cobbles and stones, shrink-swell; all together or one at a time). The rules are in `policy.js` (version 2, October 2026). Adjusted scores are the Institute's estimates, not NRCS ratings.
+- **Adjusted score (optional).** Three controls change it: whether the land is artificially drained, whether the biochar has a meaningful liming value, and whether to treat application considerations (slope, flooding, cobbles and stones, shrink-swell; all together or one at a time) as notes, not limits. The rules are in `policy.js` (version 2, October 2026). Adjusted scores are the Institute's estimates, not NRCS ratings.
 - **Acreage** for the nation, any state or county, and the current view.
 - **Your fields.** Draw fields or upload boundaries (.zip shapefile, GeoJSON, KML or KMZ). Soils come from USDA Soil Data Access through the Institute's lookup service; boundaries are not saved by the Institute. Each field shows acres by response class, the soils, what biochar might improve, and an optional soil test pH.
 
