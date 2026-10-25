@@ -194,7 +194,7 @@
  <div id="map"></div>
 <div id="map-updating" role="status" hidden>Updating map…</div>
 <div id="field-toolbar" class="panel" role="toolbar" aria-label="Field tools" hidden>
- <button id="draw-field" type="button" aria-pressed="false">Draw polygon</button><button id="draw-rect" type="button" aria-pressed="false">Draw rectangle</button><button id="upload-fields" type="button">Upload boundaries</button><button id="fields-done" type="button">Done</button>
+ <button id="draw-field" type="button" aria-pressed="false">Draw polygon</button><button id="draw-rect" type="button" aria-pressed="false">Draw rectangle</button><button id="upload-fields" type="button">Upload boundaries</button><button id="clear-fields" type="button" hidden>Clear fields</button><button id="fields-done" type="button">Done</button>
  <p id="field-toolbar-hint" role="status"></p>
  <input id="field-file" type="file" accept=".zip,.kmz,.kml,.geojson,.json" multiple hidden>
 </div>
@@ -260,6 +260,7 @@
   <p id="field-notes" class="hint" role="status" hidden></p>
   <p id="fields-none" hidden></p>
   <ol id="field-list" class="field-list" aria-label="Your fields"></ol>
+  <button id="clear-fields-panel" class="text-button" type="button" hidden>Clear all fields</button>
   <div id="fields-total" hidden>
    <h4 id="fields-total-title">All fields</h4>
    <div id="fields-total-table"></div>
@@ -519,8 +520,8 @@
 <script src="policy.js?v=20261011-liming"></script>
 <script src="acreage.js?v=20261013-zoom18"></script>
 <script src="biochar_engine.js?v=20261011-fields"></script>
-<script src="insights.js?v=20261011-fields"></script>
+<script src="insights.js?v=20261024-ph"></script>
 <script src="uploads.js?v=20261012-audit"></script>
-<script src="fields.js?v=20261013-launcher"></script>
+<script src="fields.js?v=20261024-clear"></script>
 </body>
 </html>

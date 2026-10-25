@@ -82,6 +82,14 @@
   f.outline=L.featureGroup([halo,line]).addTo(map);f.outline.bindTooltip(textLabel(f.name),{permanent:true,direction:'center',className:'field-label'});
   fields.push(f);queue.push(f);batch.total++;renderList();if(!quiet)pump();return f;
  }
+ // Clear every field at once (October 24, 2026). Queued lookups are skipped; one still running is ignored when it returns.
+ function clearFields(){
+  if(!fields.length)return;
+  if(fields.length>1&&!window.confirm('Remove all '+fields.length+' fields from the map?'))return;
+  for(const f of fields.slice())removeField(f);
+  queue.length=0;progress('');if(!running)batch.total=batch.done=0;
+  (toolbar.hidden?$('select-fields'):$('draw-field')).focus();
+ }
  function removeField(f){
   f.removed=true;map.removeLayer(f.outline);if(f.soilLayer)map.removeLayer(f.soilLayer);
   fields.splice(fields.indexOf(f),1);if(selected&&selected.field===f)selected=null;renderList();renderTotals();renderSoil();leaveFieldModeIfEmpty();
@@ -94,11 +102,12 @@
  async function slot(){for(;;){const now=Date.now();while(sent.length&&now-sent[0]>60000)sent.shift();if(sent.length<PER_MINUTE){sent.push(now);return;}const ms=60000-(now-sent[0])+250;progress('Pausing about '+Math.ceil(ms/1000)+' seconds to stay within the lookup limit, then continuing…');await wait(ms);}}
  async function post(ring,f){
   for(let attempt=0;;attempt++){
-   await slot();if(f?.progress)progress(f.progress);
+   if(f?.removed)throw new Error('This field was removed.');
+   await slot();if(f?.removed)throw new Error('This field was removed.');if(f?.progress)progress(f.progress);
    let r,data;
    try{r=await fetch(AOI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geometry:{type:'Polygon',coordinates:[ring]}})});data=await r.json().catch(()=>({}));}
    catch{if(attempt<3){await wait(5000);continue;}throw new Error('The soil lookup service could not be reached. Check your connection and try again.');}
-   if(r.status===429&&attempt<4){progress('The lookup service is busy. Waiting a moment, then continuing…');await wait(20000);continue;}
+   if(r.status===429&&attempt<4){if(!f?.removed)progress('The lookup service is busy. Waiting a moment, then continuing…');await wait(20000);continue;}
    if(!r.ok)throw Object.assign(new Error(data.error||'The soil lookup could not complete.'),{status:r.status});
    return data;
   }
@@ -110,7 +119,8 @@
    const n=++batch.done;f.progress='Looking up soils for field '+n+' of '+batch.total+'…';progress(f.progress);
    lookupField(f).then(()=>{f.status='done';},e=>{f.status='error';f.error=e.message;}).finally(()=>{
     running--;if(!f.removed){draw_(f);renderList();renderTotals();}
-    if(!queue.length&&!running){const failed=fields.filter(x=>x.status==='error').length;const found=fields.filter(x=>x.status==='done').length;progress(failed?failed+' field'+(failed===1?'':'s')+' could not be looked up. See the message under each field.':'Soils found for '+found+' field'+(found===1?'':'s')+'. Hover over a soil for its rating.');batch.total=batch.done=0;}
+    if(!queue.length&&!running&&!fields.length){progress('');batch.total=batch.done=0;}
+    else if(!queue.length&&!running){const failed=fields.filter(x=>x.status==='error').length;const found=fields.filter(x=>x.status==='done').length;progress(failed?failed+' field'+(failed===1?'':'s')+' could not be looked up. See the message under each field.':'Soils found for '+found+' field'+(found===1?'':'s')+'. Hover over a soil for its rating.');batch.total=batch.done=0;}
     pump();
    });
   }
@@ -248,6 +258,7 @@
  }
  function renderList(){
   const list=$('field-list'),a=answers();list.replaceChildren();
+  $('clear-fields').hidden=$('clear-fields-panel').hidden=!fields.length;
   for(const f of fields){
    const li=document.createElement('li');li.className='field-item';
    const head=document.createElement('div');head.className='field-head';
@@ -341,6 +352,7 @@
   download(lines.join('\n'),'text/csv','biochar-field-soils.csv');
  });
 
- window.abiFields={fields,addField,removeField,get busy(){return running>0||queue.length>0;},score,available,pieces,queryRing};
+ $('clear-fields').addEventListener('click',clearFields);$('clear-fields-panel').addEventListener('click',clearFields);
+ window.abiFields={fields,addField,removeField,clearFields,get busy(){return running>0||queue.length>0;},score,available,pieces,queryRing};
  renderList();
 })();
