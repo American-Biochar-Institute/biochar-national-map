@@ -71,8 +71,8 @@
    ksat:Number.isFinite(p.ksat)&&p.ksat>14?'Biochar may slow water loss through this soil and help keep nutrients in the root zone.':null,
    meq:Number.isFinite(p.meq)&&p.meq<12?'Biochar may improve this soil\'s ability to hold nutrients.':null,
    oc:Number.isFinite(p.oc)&&p.oc<10?'Biochar can add lasting carbon to this soil.':null,
-   // USDA soil reaction classes: below 6.6 is acid; 6.6 to 7.3 is neutral (October 24, 2026 evidence audit).
-   ph:Number.isFinite(p.ph)&&p.ph<6.6?'This soil is acidic. A suitable biochar may help raise its pH.':null
+   // Shown below pH 5.9 (Brandon, October 26, 2026).
+   ph:Number.isFinite(p.ph)&&p.ph<5.9?'This soil is acidic. A suitable biochar may help raise its pH.':null
   };
   const opportunities=all.opportunities.filter(r=>benefit[r.key]).map(r=>({...r,text:benefit[r.key]}));
   const concern={
