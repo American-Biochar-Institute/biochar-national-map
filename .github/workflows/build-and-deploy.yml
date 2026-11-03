@@ -27,7 +27,7 @@ jobs:
       - name: Add the site files to the site root
         run: |
           mkdir -p site/draw-images
-          cp index.html explorer.html site/
+          cp index.html explorer.html abi-logo-horizontal.svg site/
           cp acreage.js acreage-worker.js sectioned-grid.js index-grid.js index-grid.json policy.js site/
           cp fields.js uploads.js biochar_engine.js insights.js turf.min.js site/
           cp hydrology.js hydro-major-rivers.geojson hydro-lakes.geojson interstates.geojson site/

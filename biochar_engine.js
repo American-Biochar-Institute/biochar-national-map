@@ -1,5 +1,5 @@
 /*
- * biochar_engine.js  (v1.1, October 2026)
+ * biochar_engine.js  (v1.2, November 2026)
  * American Biochar Institute (the Institute) - biochar.org
  *
  * Reference implementation of the NRCS soil interpretation
@@ -17,11 +17,12 @@
  *   - NASIS "sigmoid" evaluations are Zadeh S-curves (piecewise quadratic)
  *     between the published breakpoints.
  *
- * What is approximate (flagged in CALC_NOTES and in the UI):
- *   - Water table, MEQ, LEP, and flooding do not reproduce every stored NRCS
- *     value from SSURGO properties. The bulk density ratio comes from the NASIS
- *     property script for property 62702 (public NASIS export, July 2024).
- *   - These only matter where NRCS did not store the subrule value (NRCS keeps
+ * Property calculations follow the NASIS property scripts sent by NRCS (Bob
+ * Dobos, October 15 and 23 and November 2, 2026). Where a script could be read
+ * more than one way, the reading that reproduces the stored NRCS subrule
+ * values nationwide was chosen (engine-update-2026-11/). Match rates are in
+ * CALC_NOTES.
+ *   - Calculated values only matter where NRCS did not store the subrule value (NRCS keeps
  *     the 5 most limiting per component). The engine calibrates unstored
  *     dynamic values to the published rating, so "all subrules on, no user
  *     data" reproduces the NRCS rating.
@@ -68,9 +69,10 @@
 
   // Slope x O-horizon thickness response surface (Biochar Slope and Organic
   // Layer Thickness). Membership 1 at the lower slope, 0 at the upper slope.
+  // The last class ends at 40.1% (NASIS evaluation sent November 2, 2026).
   var SLOPE_O_TABLE = [
     { oMax: 2, a: 6, b: 15.1 }, { oMax: 4, a: 8, b: 20.1 }, { oMax: 6, a: 10, b: 25.1 },
-    { oMax: 8, a: 12, b: 30.1 }, { oMax: 10, a: 15, b: 35.1 }, { oMax: Infinity, a: 20, b: 45.1 }
+    { oMax: 8, a: 12, b: 30.1 }, { oMax: 10, a: 15, b: 35.1 }, { oMax: Infinity, a: 20, b: 40.1 }
   ];
   function slopeO(slope, othk) {
     if (!isNum(slope)) return null;
@@ -84,6 +86,18 @@
   var FLOOD_CLASSES = ["None", "Very rare", "Rare", "Occasional", "Frequent", "Very frequent"];
   var FLOOD_VALUE = { "None": 1, "Very rare": 1, "Rare": 0.6, "Occasional": 0.2, "Common": 0.2, "Frequent": 0, "Very frequent": 0 };
   var FLOOD_RATER = { 0: "None", 1: "Very rare", 2: "Rare", 3: "Occasional", 4: "Frequent", 5: "Very frequent" };
+  // Flooding named in the map unit name (NASIS "FLOODING BY MAP UNIT NAME"): very rarely 1, rarely 2,
+  // occasionally 3, commonly 4, frequently 5, none named 0. Scored linearly from 1 (1.0) to 4 (0).
+  function floodNameClass(muname) {
+    var m = String(muname || "");
+    if (/, very rarely flooded/i.test(m)) return 1;
+    if (/, rarely flooded/i.test(m)) return 2;
+    if (/, occasionally flooded/i.test(m)) return 3;
+    if (/commonly flooded/i.test(m)) return 4;
+    if (/, frequently flooded/i.test(m)) return 5;
+    return 0;
+  }
+  function floodNameValue(c) { return isNum(c) && +c > 0 ? linFall(+c, 1, 4) : 1; }
   var POND_CLASSES = ["None", "Rare", "Occasional", "Frequent"];
   var POND_VALUE = { "None": 1, "Rare": 1 - 1 / 1.2, "Occasional": 0, "Common": 0, "Frequent": 0 };
   var POND_RATER = { 0: "None", 1: "Rare", 2: "Occasional", 3: "Frequent" };
@@ -95,7 +109,7 @@
   // ---------------------------------------------------------------------------
   var SUBRULES = [
     { key: "wt", group: "site", name: "Water Table Rule (Biochar Response)", label: "Depth to water table",
-      criteria: "Growing-season water table: >75 cm well suited, 15-75 somewhat, <15 poorly. Null = well suited.",
+      criteria: "Shallowest 'wet' depth in the growing-season months for the soil temperature regime: >75 cm well suited, 15-75 somewhat, <15 poorly. Null = well suited.",
       inputs: [{ id: "depth", label: "Shallowest growing-season water table (cm). Leave blank if none within 200 cm.", unit: "cm" }],
       prop: function (p) { return p.wtdepth; }, propUnit: "cm",
       curve: function (x) { return x === null || x === undefined ? 1 : sRise(x, 15, 75); },
@@ -113,13 +127,17 @@
       curve: function (x) { return x === null || x === undefined ? 1 : (x in POND_VALUE ? POND_VALUE[x] : null); },
       fromInputs: function (v) { return { prop: v.cls || null }; } },
     { key: "flood", group: "site", name: "SOH - Flooding Frequency Rating (Suitability)", label: "Flooding frequency",
-      criteria: "None to very rare well suited; rare to occasional somewhat; frequent poorly. Null = well suited.",
+      criteria: "None to very rare well suited; rare to occasional somewhat; frequent poorly. Null = well suited. A flooding class in the map unit name also counts (the lower of the two).",
       inputs: [{ id: "cls", label: "Flooding frequency class", type: "select", options: FLOOD_CLASSES }],
       prop: function (p) { return p.floodclass; }, propUnit: "class",
-      curve: function (x) { return x === null || x === undefined ? 1 : (x in FLOOD_VALUE ? FLOOD_VALUE[x] : null); },
-      fromInputs: function (v) { return { prop: v.cls || null }; } },
+      curve: function (x, p) {
+        var a = x === null || x === undefined ? 1 : (x in FLOOD_VALUE ? FLOOD_VALUE[x] : null);
+        return a === null ? null : Math.min(a, floodNameValue(p ? p.floodname : 0));
+      },
+      // A class the user enters replaces both the mapped class and the map unit name.
+      fromInputs: function (v) { return { prop: v.cls || null, extra: { floodname: 0 } }; } },
     { key: "cobble", group: "site", name: "SOH - Cobble and Stone Content 0-30cm", label: "Cobbles and stones",
-      criteria: "Fragments >=75 mm in 0-30 cm: <2% well, >15% poorly. Surface stones >=250 mm: <0.1% well, >3% poorly. Lower of the two.",
+      criteria: "Fragments >=75 mm (with cohesive, persistent artifacts) in layers starting within 30 cm below the O horizon: <2% well, >15% poorly. Surface stones >=250 mm: <0.1% well, >3% poorly. Lower of the two.",
       inputs: [{ id: "frag75", label: "Fragments >=75 mm, 0-30 cm (% volume)", unit: "%" }, { id: "stone250", label: "Surface stones >=250 mm (% cover)", unit: "%", def: 0 }],
       prop: function (p) { return p.frag75; }, propUnit: "% vol >=75 mm",
       curve: function (x, p) {
@@ -128,7 +146,7 @@
       },
       fromInputs: function (v) { return { prop: isNum(v.frag75) ? +v.frag75 : 0, extra: { stone250: isNum(v.stone250) ? +v.stone250 : 0 } }; } },
     { key: "karst", group: "site", name: "SOH - Karst landform", label: "Karst",
-      criteria: "Map unit name contains 'karst', and sinkholes listed or no landform data = poorly suited.",
+      criteria: "Map unit name contains 'karst' = poorly suited.",
       inputs: [{ id: "cls", label: "Karst present?", type: "select", options: ["No", "Yes"] }],
       prop: function (p) { return p.karst; }, propUnit: "",
       curve: function (x) { return x === null || x === undefined ? 1 : (x ? 0 : 1); },
@@ -209,20 +227,22 @@
   var SITE_KEYS = SUBRULES.filter(function (s) { return s.group === "site"; }).map(function (s) { return s.key; });
   var DYN_KEYS = SUBRULES.filter(function (s) { return s.group === "dynamic"; }).map(function (s) { return s.key; });
 
+  // Match rates: share of stored NRCS subrule values (strictly between 0 and 1) reproduced within 0.0015,
+  // soils nationwide with SSURGO data (engine-update-2026-11/variants.json, November 2, 2026).
   var CALC_NOTES = {
-    ph: "Weighted average 0-30 cm below thin (<20 cm) surface O horizons, stops at a restriction. Matches 99.8% of stored values.",
-    oc: "Sum of OM/1.724 x bulk density x thickness x fine-earth volume to 30 cm (fragment weight converted to volume). Matches 99.8%.",
-    ksat: "Maximum 0-30 cm from the surface, stops at a restriction. Matches 99.7%.",
-    awc: "Weighted average 0-30 cm below thin (<20 cm) surface O horizons. Matches 99.8% on mineral soils, lower with O horizons.",
-    meq: "Sum of CEC7 x bulk density x thickness x (1 - fragment volume) to 30 cm. Matches about 97% outside urban survey areas, 71% overall.",
-    lep: "Maximum 0-30 cm below thin surface O horizons. Matches about 84% (rarely limiting).",
-    bd: "NASIS property 62702: (Db 1/3 bar - ideal) / delta, ideal = (1.65 sand + 1.30 silt + 1.25 clay)/100, delta = 0.002081 sand + 0.003912 silt + 0.0024351 clay. Maximum over horizons starting within 31 cm below the surface O horizon; Histosols and histic soils = 0. Matches 99.9% of stored values.",
-    wt: "Shallowest 'Wet' soil moisture depth in any month. Matches about 93%.",
-    slope: "Representative slope and surface O-horizon thickness on the response surface. Matches about 99% on mineral soils.",
-    cobble: "Max fragment volume >=75 mm in 0-30 cm and surface cover of stones >=250 mm; lower of the two. Matches about 97%.",
-    flood: "Most frequent monthly flooding class. Rare = 0.6, occasional = 0.2, frequent = 0.",
-    pond: "Most frequent monthly ponding class. Rare = 0.17, occasional or frequent = 0.",
-    karst: "'Karst' in the map unit name, with sinkholes listed or no landform data."
+    ph: "Weighted average 1:1 water pH (0.01M CaCl2 pH when blank), 0-30 cm below the surface organic layer, above a cemented or bedrock restriction. Matches 99.8% of stored values.",
+    oc: "Sum of 58 x OM x bulk density (1/3 bar, else 1/10 bar, else 1.45) x fine-earth volume x thickness, 0-30 cm from the surface above a restriction; layers without fragment data add nothing. Matches 99.7%.",
+    ksat: "Maximum 0-30 cm from the surface, stops at a restriction. Matches 98.9%.",
+    awc: "Weighted average 0-30 cm below the surface organic layer, above a cemented or bedrock restriction. Matches 100%.",
+    meq: "Sum of CEC7 (ECEC / 0.8 when blank) / 100 x bulk density (1 when blank) x (1 - fragments and cohesive, persistent artifacts) x thickness, 0-30 cm or to the first restriction; the surface organic layer counts only in Histosols. Matches 99.3%.",
+    lep: "Maximum LEP (blank = 0) over layers starting within 31 cm below the surface organic layer, above a cemented or bedrock restriction. Matches 99.9%.",
+    bd: "NASIS property 62702: (Db 1/3 bar - ideal) / delta, ideal = (1.65 sand + 1.30 silt + 1.25 clay)/100, delta = 0.002081 sand + 0.003912 silt + 0.0024351 clay. Maximum over horizons starting within 31 cm below the surface organic layer; Histosols and histic soils = 0. Matches 99.99%.",
+    wt: "Shallowest 'Wet' soil moisture depth in the growing-season months set by the soil temperature regime. Matches 100%.",
+    slope: "Representative slope on the response surface for the surface organic layer thickness (organic and histic soils use 0). Matches 100%.",
+    cobble: "Maximum volume of fragments >=75 mm plus cohesive, persistent artifacts >=75 mm in layers starting within 30 cm below the surface organic layer, and surface cover of stones >=250 mm; lower of the two. Matches 99.2%.",
+    flood: "Most frequent monthly flooding class (rare = 0.6, occasional = 0.2, frequent = 0) and any flooding class in the map unit name; lower of the two. Matches 100%.",
+    pond: "Most frequent monthly ponding class. Rare = 0.17, occasional or frequent = 0. Matches 100%.",
+    karst: "'Karst' in the map unit name. NRCS stores this check as failed for every rated soil with 'karst' in its name and none without it."
   };
 
   // ---------------------------------------------------------------------------
@@ -252,15 +272,62 @@
   }
 
   // ---------------------------------------------------------------------------
-  // SSURGO properties -> subrule inputs
-  // comp.horizons: [{hzname, hzdept_r, hzdepb_r, ph1to1h2o_r, om_r, dbthirdbar_r,
-  //   awc_r, ksat_r, lep_r, cec7_r, sieveno10_r, frag3to10_r, fraggt10_r,
-  //   fragvol_tot, fragvol_75}]
-  // comp.site: {resdept, wtdepth, stones250, floodrater, pondrater, sinkholes}
-  // comp.slope_r, comp.muname
+  // SSURGO properties -> subrule inputs (NASIS property scripts)
+  // comp.horizons: [{hzname, hzdept_r, hzdepb_r, ph1to1h2o_r, ph01mcacl2_r, om_r,
+  //   dbthirdbar_r, dbtenthbar_r, awc_r, ksat_r, lep_r, cec7_r, ecec_r,
+  //   sieveno10_r, frag3to10_r, fraggt10_r, sandtotal_r, silttotal_r, claytotal_r,
+  //   fragvol_tot, fragvol_75, rvtex_n, rvtex_org, huart_cp, huart_cp75}]
+  // comp.site: {resdept, cemdept, reskinddept, wtdepth or wet {jan: depth, ...},
+  //   taxtempregime, taxtempcl, stones250, floodrater, pondrater, sinkholes, landforms}
+  // comp.slope_r, comp.muname, comp.taxorder, comp.taxsuborder, comp.taxgrtgroup, comp.taxsubgrp
   // ---------------------------------------------------------------------------
   function isO(h) { return /^\^?\d*O/.test(h.hzname || ""); }
   function n(v) { return isNum(v) ? +v : null; }
+
+  // Growing-season months by soil temperature regime (NASIS "WATER TABLE DEPTH, GROWING SEASON").
+  var MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  function monthRange(a, b) { return MONTHS.slice(MONTHS.indexOf(a), MONTHS.indexOf(b) + 1); }
+  var GROW_MONTHS = {
+    thermic: monthRange("feb", "oct"), mesic: monthRange("mar", "oct"), cryic: monthRange("jun", "aug"),
+    frigid: monthRange("may", "sep"), isofrigid: monthRange("apr", "oct"), hyperthermic: monthRange("feb", "dec"),
+    isothermic: MONTHS, isohyperthermic: MONTHS, isomesic: MONTHS, gelic: ["jul", "aug"]
+  };
+  var GELIC_CLASSES = ["hypergelic", "pergelic", "subgelic"];
+  function growingMonths(regime, cls) {
+    var out = (GROW_MONTHS[String(regime || "").toLowerCase()] || []).slice();
+    if (GELIC_CLASSES.indexOf(String(cls || "").toLowerCase()) >= 0) ["jul", "aug"].forEach(function (m) { if (out.indexOf(m) < 0) out.push(m); });
+    return out;
+  }
+  // Shallowest 'Wet' depth in growing-season months; a month with no depth counts as 200 cm.
+  // Uses monthly rows (site.wet) when present, else site.wtdepth (SQL.site computes the same value).
+  function wtGrowing(site) {
+    if (!site.wet) return n(site.wtdepth);
+    var d = null;
+    growingMonths(site.taxtempregime, site.taxtempcl).forEach(function (m) {
+      if (m in site.wet) { var v = n(site.wet[m]); d = Math.min(d === null ? 200 : d, v === null ? 200 : v); }
+    });
+    return d;
+  }
+
+  // Organic and histic soils (Histosols, Histels, histic subgroups, Histoturbels).
+  function organicSoil(comp) {
+    var t = [comp.taxorder, comp.taxsuborder, comp.taxsubgrp, comp.taxgrtgroup].map(function (x) { return String(x || "").toLowerCase(); });
+    return { histic: !!comp.taxorder && (/histosols/.test(t[0]) || /histels/.test(t[1]) || /^histic/.test(t[2]) || /histoturbels/.test(t[3])),
+      histosol: /histosols/.test(t[0]) };
+  }
+  // Surface organic layer thickness (NASIS "THICKNESS OF SURFACE ORGANIC HORIZON"): the top of the first
+  // layer whose representative texture is not organic (muck, peat, mucky peat, plant materials,
+  // coprogenous earth). Falls back to O horizon names when texture data are absent.
+  function organicThickness(hz) {
+    var hasTex = hz.some(function (h) { return isNum(h.rvtex_n); });
+    if (hasTex) {
+      for (var i = 0; i < hz.length; i++) if (n(hz[i].rvtex_n) > 0 && n(hz[i].rvtex_org) < n(hz[i].rvtex_n)) return hz[i].top;
+      return 0;
+    }
+    var o = 0;
+    for (var j = 0; j < hz.length; j++) { if (isO(hz[j]) && hz[j].top <= o + 0.01) o = hz[j].bot; else break; }
+    return o;
+  }
 
   function computeProps(comp) {
     var hz = (comp.horizons || []).filter(function (h) { return isNum(h.hzdept_r) && isNum(h.hzdepb_r); })
@@ -268,70 +335,84 @@
       .sort(function (a, b) { return a.top - b.top; });
     var site = comp.site || {};
     var res = n(site.resdept);
-    var othk = 0;
-    for (var i = 0; i < hz.length; i++) { if (isO(hz[i]) && hz[i].top <= othk + 0.01) othk = hz[i].bot; else break; }
+    // Cemented or bedrock restriction (permafrost, bedrock, cemented horizon, duripan, ortstein, petro- layers).
+    var cem = ("reskinddept" in site) ? n(site.reskinddept) : n(site.cemdept);
+    var org = organicSoil(comp), oRaw = organicThickness(hz);
+    var othk = org.histic ? 0 : oRaw;            // THICKNESS OF SURFACE ORGANIC HORIZON
+    var othkNH = org.histosol ? 0 : oRaw;        // SURFACE ORGANIC HORIZON THICKNESS, NOT HISTOSOL (MEQ)
 
-    function windowRows(z0, dropO, stopRes, depth) {
-      var end = z0 + (depth || 30);
-      if (stopRes && res !== null) end = Math.min(end, res);
-      var out = [];
+    function overlap(h, z0, end) { return Math.max(0, Math.min(h.bot, end) - Math.max(h.top, z0)); }
+    function wavgBelowO(f) {
+      var end = Math.min(othk + 30, cem === null ? Infinity : cem), s = 0, w = 0;
       hz.forEach(function (h) {
-        if (dropO && isO(h)) return;
-        var t = Math.min(h.bot, end) - Math.max(h.top, z0);
-        if (t > 0) out.push({ h: h, t: t });
+        if (h.bot - othk <= 0) return;
+        var t = overlap(h, othk, end), v = f(h);
+        if (t > 0 && v !== null) { s += v * t; w += t; }
       });
-      return out;
-    }
-    function wavg(rows, f) {
-      var s = 0, w = 0;
-      rows.forEach(function (r) { var v = n(r.h[f]); if (v !== null) { s += v * r.t; w += r.t; } });
       return w > 0 ? s / w : null;
     }
-    function vmax(rows, f) {
-      var m = null;
-      rows.forEach(function (r) { var v = n(r.h[f]); if (v !== null && (m === null || v > m)) m = v; });
-      return m;
+    // Layers whose top lies within 31 cm below the organic layer (or above a shallower cemented layer).
+    function inRange31(h) {
+      if (h.bot - othk <= 0) return false;
+      var cb = cem === null ? null : cem - othk, minD = cb !== null && cb < 31 ? cb : 31, rel = h.top - othk;
+      return rel === 0 || rel <= minD;
     }
-    // Window that skips thin surface O horizons (pH, AWC, LEP)
-    var mineralTop = null;
-    hz.forEach(function (h) { if (!isO(h) && (mineralTop === null || h.top < mineralTop)) mineralTop = h.top; });
-    var thinO = othk < 20;
-    var wMin = thinO ? windowRows(mineralTop === null ? 0 : mineralTop, true, true) : windowRows(0, false, true);
-    var wSurf = windowRows(0, false, true);
-    var wSurfNoStop = windowRows(0, false, false);
 
-    function fineEarthVol(h) {
-      var s10 = isNum(h.sieveno10_r) ? +h.sieveno10_r / 100 : 1;
-      var w75 = ((n(h.frag3to10_r) || 0) + (n(h.fraggt10_r) || 0)) / 100;
-      var feW = (1 - w75) * s10, frW = 1 - feW, db = n(h.dbthirdbar_r);
-      if (!db || frW <= 0) return 1;
-      var vf = (frW / 2.65) / ((frW / 2.65) + (feW / db));
-      return 1 - vf;
-    }
-    var oc = null, meq = null;
-    wSurf.forEach(function (r) {
-      var om = n(r.h.om_r), db = n(r.h.dbthirdbar_r), cec = n(r.h.cec7_r);
-      if (om !== null && db !== null) oc = (oc || 0) + om / 1.724 / 100 * db * r.t * fineEarthVol(r.h) * 10;
-      if (cec !== null && db !== null) meq = (meq || 0) + cec / 100 * db * r.t * (1 - (n(r.h.fragvol_tot) || 0) / 100);
+    // pH: 1:1 water, else 0.01M CaCl2.
+    var ph = wavgBelowO(function (h) { var w = n(h.ph1to1h2o_r); return w !== null ? w : n(h.ph01mcacl2_r); });
+    var awc = wavgBelowO(function (h) { return n(h.awc_r); });
+    var lep = null;
+    hz.forEach(function (h) { if (inRange31(h)) { var v = n(h.lep_r); if (v === null) v = 0; if (lep === null || v > lep) lep = v; } });
+
+    // Ksat: maximum 0-30 cm from the surface, stopping at any restriction (fits the stored values best).
+    var ksat = null, kEnd = Math.min(30, res === null ? Infinity : res);
+    hz.forEach(function (h) { var v = n(h.ksat_r); if (overlap(h, 0, kEnd) > 0 && v !== null && (ksat === null || v > ksat)) ksat = v; });
+
+    // Organic carbon, kg/m2 to 30 cm (null when no layer lies in the window).
+    var oc = 0, ocAny = false, ocEnd = Math.min(30, res === null ? Infinity : res);
+    hz.forEach(function (h) {
+      var t = overlap(h, 0, ocEnd);
+      if (t <= 0) return;
+      ocAny = true;
+      var om = n(h.om_r) || 0, d3 = n(h.dbthirdbar_r), dbF = d3 !== null ? d3 : n(h.dbtenthbar_r), db = dbF !== null ? dbF : 1.45;
+      var s10 = n(h.sieveno10_r), f3 = n(h.frag3to10_r), f10 = n(h.fraggt10_r);
+      if (dbF === null || s10 === null || f3 === null || f10 === null) return;   // no fine-earth value: adds nothing
+      var pct = (100 - s10) * (100 - (f3 + f10)) / 100, tot = pct + f3 + f10;
+      var fine = 100 - ((tot / 2.65) / ((tot / 2.65) + ((100 - tot) / dbF))) * 100;
+      oc += t * 58 * om * db * fine / 100;
     });
-    var frag75 = null;
-    wSurfNoStop.forEach(function (r) { var v = n(r.h.fragvol_75) || 0; if (frag75 === null || v > frag75) frag75 = v; });
+    oc = ocAny ? oc / 1000 : null;
+
+    // MEQ, as the NASIS script is written (its window arithmetic included).
+    var meq = null, mDepth = res === null ? null : res - othkNH, mMin = mDepth !== null && mDepth < 31 ? mDepth : 30;
+    hz.forEach(function (h) {
+      var c7 = n(h.cec7_r), ec = n(h.ecec_r), cec = c7 !== null ? c7 : (ec !== null ? ec / 0.8 : null);
+      if (cec === null) return;
+      var db = n(h.dbthirdbar_r); if (db === null) db = 1;
+      var fr = (n(h.fragvol_tot) || 0) + (n(h.huart_cp) || 0);
+      var top = h.top > mMin ? mMin : h.top - othkNH, bot = h.bot > mMin ? mMin : h.bot - othkNH;
+      meq = (meq || 0) + cec / 100 * db * (1 - fr / 100) * (bot - top);
+    });
+
+    // Cobbles: layers starting within 30 cm below the organic layer.
+    var frag75 = 0;
+    hz.forEach(function (h) { if (h.top <= othk + 30) frag75 = Math.max(frag75, (n(h.fragvol_75) || 0) + (n(h.huart_cp75) || 0)); });
 
     var fr = n(site.floodrater), pr = n(site.pondrater);
     return {
       othk: othk,
-      ph: wavg(wMin, "ph1to1h2o_r"),
-      awc: wavg(wMin, "awc_r"),
-      lep: vmax(wMin, "lep_r"),
-      ksat: vmax(wSurf, "ksat_r"),
+      ph: ph, awc: awc, lep: lep, ksat: ksat,
       oc: oc, meq: meq,
-      frag75: frag75 === null ? 0 : frag75,
+      frag75: frag75,
       stone250: n(site.stones250) || 0,
-      wtdepth: n(site.wtdepth),
+      wtdepth: wtGrowing(site),
       floodclass: fr === null ? null : FLOOD_RATER[fr],
+      floodname: floodNameClass(comp.muname),
       pondclass: pr === null ? null : POND_RATER[pr],
       slope: n(comp.slope_r),
-      karst: (n(site.sinkholes) || 0) > 0 || /karst/i.test(comp.muname || ""),
+      // The NASIS sinkhole branch applies only where a sinkhole record exists; no rated soil named 'karst' has one,
+      // and stored values fail every soil named 'karst' (engine-update-2026-11), so the name decides.
+      karst: /karst/i.test(comp.muname || ""),
       bdratio: bdRatioProfile(hz, othk, n(site.cemdept), comp)
     };
   }
@@ -487,6 +568,17 @@
   function keyList(keys) {
     return keys.map(function (k) { return "'" + String(k).replace(/[^0-9]/g, "") + "'"; }).join(",");
   }
+  var ORGANIC_LIEUTEX = "('Muck','Peat','Mucky peat','Slightly decomposed plant material','Moderately decomposed plant material','Highly decomposed plant material','Coprogenous earth')";
+  var CEMENTED_KINDS = "('Permafrost','Densic bedrock','Lithic bedrock','Paralithic bedrock','Cemented horizon','Duripan','Ortstein','Petrocalcic','Petroferric','Petrogypsic')";
+  var MONTH_NAMES = { jan: "January", feb: "February", mar: "March", apr: "April", may: "May", jun: "June",
+    jul: "July", aug: "August", sep: "September", oct: "October", nov: "November", dec: "December" };
+  function monthList(ms) { return "(" + ms.map(function (m) { return "'" + MONTH_NAMES[m] + "'"; }).join(",") + ")"; }
+  // The growing-season months of growingMonths() as a WHERE clause on comonth cm and component c.
+  function growingSeasonSQL() {
+    var parts = ["(c.taxtempcl IN ('" + GELIC_CLASSES.join("','") + "') AND cm.month IN " + monthList(["jul", "aug"]) + ")"];
+    Object.keys(GROW_MONTHS).forEach(function (r) { parts.push("(c.taxtempregime = '" + r + "' AND cm.month IN " + monthList(GROW_MONTHS[r]) + ")"); });
+    return parts.join(" OR ");
+  }
   var SQL = {
     mukeyAtPoint: function (lon, lat) {
       return "SELECT mukey FROM SDA_Get_Mukey_from_intersection_with_WktWgs84('point(" + (+lon) + " " + (+lat) + ")')";
@@ -513,17 +605,24 @@
     horizons: function (mukeys) {
       return "SELECT ch.cokey, ch.chkey, ch.hzname, ch.hzdept_r, ch.hzdepb_r, ch.ph1to1h2o_r, ch.om_r, ch.dbthirdbar_r, " +
         "ch.awc_r, ch.ksat_r, ch.lep_r, ch.cec7_r, ch.sieveno10_r, ch.frag3to10_r, ch.fraggt10_r, ch.sandtotal_r, ch.silttotal_r, ch.claytotal_r, " +
+        "ch.ecec_r, ch.ph01mcacl2_r, ch.dbtenthbar_r, " +
         "(SELECT SUM(f.fragvol_r) FROM chfrags f WHERE f.chkey = ch.chkey) AS fragvol_tot, " +
-        "(SELECT SUM(f.fragvol_r) FROM chfrags f WHERE f.chkey = ch.chkey AND f.fragsize_l >= 75) AS fragvol_75 " +
+        "(SELECT SUM(f.fragvol_r) FROM chfrags f WHERE f.chkey = ch.chkey AND f.fragsize_l >= 75) AS fragvol_75, " +
+        "(SELECT COUNT(*) FROM chtexturegrp g LEFT JOIN chtexture t ON t.chtgkey = g.chtgkey WHERE g.chkey = ch.chkey AND g.rvindicator = 'Yes') AS rvtex_n, " +
+        "(SELECT COUNT(*) FROM chtexturegrp g INNER JOIN chtexture t ON t.chtgkey = g.chtgkey WHERE g.chkey = ch.chkey AND g.rvindicator = 'Yes' AND t.lieutex IN " + ORGANIC_LIEUTEX + ") AS rvtex_org, " +
+        "(SELECT SUM(a.huartvol_r) FROM chhuarts a WHERE a.chkey = ch.chkey AND a.huartco = 'Cohesive' AND a.huartper = 'Persistent') AS huart_cp, " +
+        "(SELECT SUM(a.huartvol_r) FROM chhuarts a WHERE a.chkey = ch.chkey AND a.huartco = 'Cohesive' AND a.huartper = 'Persistent' AND a.huartsize_r >= 75) AS huart_cp75 " +
         "FROM component c INNER JOIN chorizon ch ON ch.cokey = c.cokey WHERE c.mukey IN (" + keyList(mukeys) + ") " +
         "AND ch.hzdept_r < 150 ORDER BY ch.cokey, ch.hzdept_r";
     },
     site: function (mukeys) {
-      return "SELECT c.cokey, " +
+      return "SELECT c.cokey, c.taxtempregime, c.taxtempcl, " +
         "(SELECT MIN(r.resdept_r) FROM corestrictions r WHERE r.cokey = c.cokey) AS resdept, " +
         "(SELECT MIN(r.resdept_r) FROM corestrictions r WHERE r.cokey = c.cokey AND (r.reshard LIKE '%strongly cemented%' OR r.reshard LIKE 'indurated%')) AS cemdept, " +
-        "(SELECT MIN(sm.soimoistdept_r) FROM comonth cm INNER JOIN cosoilmoist sm ON sm.comonthkey = cm.comonthkey " +
-        "WHERE cm.cokey = c.cokey AND sm.soimoiststat = 'Wet') AS wtdepth, " +
+        "(SELECT MIN(r.resdept_r) FROM corestrictions r WHERE r.cokey = c.cokey AND r.reskind IN " + CEMENTED_KINDS + ") AS reskinddept, " +
+        "(SELECT MIN(ISNULL(sm.soimoistdept_r, 200)) FROM comonth cm INNER JOIN cosoilmoist sm ON sm.comonthkey = cm.comonthkey " +
+        "WHERE cm.cokey = c.cokey AND sm.soimoiststat = 'Wet' AND (" + growingSeasonSQL() + ")) AS wtdepth, " +
+        "(SELECT COUNT(*) FROM cogeomordesc g WHERE g.cokey = c.cokey) AS landforms, " +
         "(SELECT SUM(s.sfragcov_r) FROM cosurffrags s WHERE s.cokey = c.cokey AND s.sfragsize_l >= 250) AS stones250, " +
         "(SELECT MAX(CASE cm.flodfreqcl WHEN 'Very rare' THEN 1 WHEN 'Rare' THEN 2 WHEN 'Occasional' THEN 3 WHEN 'Common' THEN 3 " +
         "WHEN 'Frequent' THEN 4 WHEN 'Very frequent' THEN 5 ELSE 0 END) FROM comonth cm WHERE cm.cokey = c.cokey) AS floodrater, " +
@@ -567,7 +666,7 @@
   return {
     RULE: RULE, DYN_WEIGHT: DYN_WEIGHT, SUBRULES: SUBRULES, BY_KEY: BY_KEY, BY_NAME: BY_NAME,
     SITE_KEYS: SITE_KEYS, DYN_KEYS: DYN_KEYS, CALC_NOTES: CALC_NOTES,
-    sRise: sRise, sFall: sFall, bdRatio: bdRatio, slopeO: slopeO, combine: combine, classify: classify, classCode: classCode,
+    sRise: sRise, sFall: sFall, bdRatio: bdRatio, slopeO: slopeO, growingMonths: growingMonths, floodNameClass: floodNameClass, combine: combine, classify: classify, classCode: classCode,
     computeProps: computeProps, membershipFromProps: membershipFromProps, buildComponent: buildComponent,
     customScore: customScore, rollup: rollup, SQL: SQL, parseSDA: parseSDA, assemble: assemble, round3: round3
   };

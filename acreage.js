@@ -25,8 +25,10 @@
   $('status-detail').textContent=P.describe(answers);
   reset.hidden=nrcs;
   for(const el of document.querySelectorAll('.col-yours'))el.hidden=nrcs;
-  $('about-rating').innerHTML=nrcs?'Each color is the USDA-NRCS interpretation <i>SOH - Dynamic Soil Properties Response to Biochar</i>, which estimates how much biochar is expected to improve a soil\'s dynamic properties. Higher means more expected gain. Zoom in for county lines.':
-   'Colors show the Institute\'s adjusted score for your choices. Darker green means greater expected response. These scores are estimates, not measured soil improvements.';
+  // The legend: what the colors show, and the no-adjusted-score row only beside an adjusted score.
+  $('about-rating').innerHTML=nrcs?'Scores run from 0 to 1. Colors show the USDA-NRCS rating <i>Dynamic Soil Properties Response to Biochar</i>. Zoom in to see county lines.':
+   'Scores run from 0 to 1. Colors show the Institute\'s adjusted score for your choices. It is an estimate, not a measured soil improvement.';
+  $('legend-noscore').hidden=nrcs;
  }
  // Only a factor box changes the one-at-a-time choices; the master switch shows all four as left out
  // while it is on, and turning it off brings back the one-at-a-time choices (none, by default).
@@ -35,7 +37,8 @@
   answers=readChoices();showChoices();update();
  }
  for(const control of [drained,raisePH,group1,...factorBoxes])control.addEventListener('change',choicesChanged);
- reset.addEventListener('click',()=>{for(const k in keep)keep[k]=true;answers=P.normalize(P.DEFAULTS);showChoices();update();drained.focus();});
+ function resetChoices(){for(const k in keep)keep[k]=true;answers=P.normalize(P.DEFAULTS);showChoices();return update();}
+ reset.addEventListener('click',()=>{resetChoices();drained.focus();});
 
  // ---- information buttons: open on hover, keyboard focus and tap; Escape closes ----
  const infos=[...document.querySelectorAll('#acreage .info')];
@@ -93,7 +96,7 @@
  const className=i=>i===6?NO_SCORE:i===5?'Unrated':data.classes[i],sum=(c,ks)=>ks.reduce((a,k)=>a+(c[k]||0),0);
  const format=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(n);
  const updating=$('map-updating');
- let data,selectedName='Contiguous U.S.',nrcsCounts=null,yourCounts=null,viewCounts=null,viewExact=true,viewNRCS=true,areaId=0,viewId=0,timer;
+ let data,selectedName='Contiguous U.S.',nrcsCounts=null,yourCounts=null,areaId=0;
  function rows(body,columns){
   body.replaceChildren();
   for(const index of order){
@@ -113,8 +116,6 @@
   if(!data)return;$('acreage-area-title').textContent=selectedName;
   const adjusted=!P.isNRCS(answers);
   rows($('acreage-rows'),[{counts:nrcsCounts},{counts:yourCounts,yours:true,adjusted}]);
-  rows($('view-rows'),[{counts:viewCounts,adjusted:!viewNRCS}]);
-  $('view-col').textContent=(viewNRCS?'NRCS acres':'Your choices acres')+(viewExact?'':' (approximate at this zoom)');
  }
  function selectedNRCS(){const c=data.counties.find(c=>c.fips===countySelect.value),s=data.states.find(s=>s.fips===stateSelect.value);return c?c.cells:s?s.cells:data.nationalCells;}
  async function updateArea(){
@@ -124,27 +125,18 @@
   const r=await ask({type:'area',answers,state:stateSelect.value,county:countySelect.value});
   if(id===areaId){yourCounts=r.counts;render();}
  }
- async function requestView(){
-  if(!data)return;const id=++viewId,b=map.getBounds();viewCounts=null;render();status.textContent='Updating current map view…';
-  try{
-   const r=await ask({type:'view',answers,zoom:map.getZoom(),bounds:[Math.max(-180,b.getWest()),Math.max(-85,b.getSouth()),Math.min(180,b.getEast()),Math.min(85,b.getNorth())]});
-   if(id!==viewId)return;viewCounts=r.counts;viewExact=r.exact;viewNRCS=P.isNRCS(answers);render();
-   status.textContent=viewExact?'Current view updates as you zoom or pan.':'Current view updates as you zoom or pan. Zoom in closer for exact 30 m acres.';
-  }catch(e){if(id===viewId)status.textContent='Current-view totals unavailable: '+e.message;}
- }
- map.on('moveend',()=>{clearTimeout(timer);timer=setTimeout(requestView,180);});
  // A change recolors the visible map and updates every acreage table; the time is kept for testing.
  async function update(){
   const v=++version,t0=performance.now();failure=null;
   window.dispatchEvent(new CustomEvent('abi:choices',{detail:{answers}})); // field results rescore right away
-  status.textContent=P.isNRCS(answers)?'Showing the NRCS rating.':'Scoring every map unit for your choices…';
+  status.textContent=P.isNRCS(answers)?'':'Scoring every map unit for your choices…';
   const busy=setTimeout(()=>{if(v===version)updating.hidden=false;},150);
-  const results=await Promise.allSettled([recolor(),updateArea(),requestView()]);
+  const results=await Promise.allSettled([recolor(),updateArea()]);
   clearTimeout(busy);
   if(v!==version)return;
   updating.hidden=true;
   const failed=results.find(r=>r.status==='rejected');
-  if(failed||failure)status.textContent='Some adjusted results are unavailable: '+(failed?failed.reason.message:failure);
+  status.textContent=failed||failure?'Some adjusted results are unavailable: '+(failed?failed.reason.message:failure):'';
   window.abiMap.lastUpdateMs=Math.round(performance.now()-t0);
  }
  map.createPane('selectedCountyPane');map.getPane('selectedCountyPane').style.zIndex=450;map.getPane('selectedCountyPane').style.pointerEvents='none';
@@ -174,20 +166,28 @@
   updateArea().catch(e=>{status.textContent='Adjusted acres unavailable: '+e.message;});fitSelected().catch(()=>{});
  }
  stateSelect.addEventListener('change',()=>{populateCounties();selectArea();});countySelect.addEventListener('change',selectArea);
+ function resetArea(){if(!data)return;stateSelect.value='';countySelect.replaceChildren(new Option('Select a state first',''));countySelect.disabled=true;selectArea();}
  $('acreage-export').addEventListener('click',()=>{
   if(!data)return;const q=s=>'"'+String(s).replaceAll('"','""')+'"',nrcs=P.isNRCS(answers);
-  const lines=[['Response',q(selectedName+' NRCS acres'),...(nrcs?[]:[q(selectedName+' your choices acres')]),q('Current map view acres ('+(viewNRCS?'NRCS':'your choices')+(viewExact?'':', approximate')+')')].join(',')];
-  for(const i of order){if(i===6&&nrcs&&viewNRCS)continue;lines.push([className(i),i===6?'':Math.round(nrcsCounts[i]*data.cellAcres),...(nrcs?[]:[yourCounts?Math.round((yourCounts[i]||0)*data.cellAcres):'']),viewCounts&&!(i===6&&viewNRCS)?Math.round((viewCounts[i]||0)*data.cellAcres):''].join(','));}
+  const lines=[['Response',q(selectedName+' NRCS acres'),...(nrcs?[]:[q(selectedName+' your choices acres')])].join(',')];
+  for(const i of order){if(i===6&&nrcs)continue;lines.push([className(i),i===6?'':Math.round(nrcsCounts[i]*data.cellAcres),...(nrcs?[]:[yourCounts?Math.round((yourCounts[i]||0)*data.cellAcres):''])].join(','));}
   lines.push('',q('Choices: '+P.describe(answers)),q(data.method),q('Adjusted scores are the Institute\'s estimates from published NRCS soil data, not NRCS ratings. They do not predict crop yield or establish program eligibility.'));
   const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),a=document.createElement('a');a.href=url;a.download='biochar-acreage'+(nrcs?'-nrcs':'-adjusted')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  });
 
+ // ---- legend: hide or show its body ----
+ const legend=$('legend'),legendToggle=$('legend-toggle');
+ legendToggle.addEventListener('click',()=>{const closed=legend.classList.toggle('collapsed');legendToggle.setAttribute('aria-expanded',String(!closed));legendToggle.textContent=closed?'Show':'Hide';});
+ L.DomEvent.disableClickPropagation(legend);L.DomEvent.disableScrollPropagation(legend);
+ // On a phone the legend starts closed so it does not cover the map.
+ if(window.matchMedia('(max-width:640px)').matches){legend.classList.add('collapsed');legendToggle.setAttribute('aria-expanded','false');legendToggle.textContent='Show';}
+
  // ---- start ----
- window.abiMap={get answers(){return answers;},lastUpdateMs:null,ask,setOpacity,imagery,colors,NO_SCORE,NO_SCORE_HELP};
+ window.abiMap={get answers(){return answers;},lastUpdateMs:null,ask,setOpacity,resetChoices,resetArea,imagery,colors,NO_SCORE,NO_SCORE_HELP};
  showChoices();
  fetch('acreage-summary.json?v=20261010-policy2').then(r=>{if(!r.ok)throw new Error('Summary data unavailable');return r.json();}).then(j=>{
   data=j;for(const s of data.states.slice().sort((a,b)=>a.name.localeCompare(b.name)))stateSelect.add(new Option(s.name,s.fips));
-  stateSelect.disabled=false;nrcsCounts=yourCounts=data.nationalCells;soil.addTo(map);render();requestView();
+  stateSelect.disabled=false;nrcsCounts=yourCounts=data.nationalCells;soil.addTo(map);render();status.textContent='';
   // Load the map-unit scores ahead of a first change, unless the browser asks to save data.
   if(!navigator.connection?.saveData)setTimeout(()=>ask({type:'prefetch'}).catch(()=>{}),2500);
  }).catch(e=>{status.textContent=e.message;});

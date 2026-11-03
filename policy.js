@@ -73,7 +73,7 @@
   if(a.drained==='yes')out.push('drained land (water table and ponding left out)');
   if(a.raisePH==='no')out.push('biochar with little liming value (soil pH left out)');
   const g=GROUP1.filter(k=>a.group1All||a.keep[k]===false).map(k=>LABELS[k].toLowerCase());
-  if(g.length)out.push((g.length>2?g.slice(0,-1).join(', ')+', and '+g[g.length-1]:g.join(' and '))+' treated as application notes');
+  if(g.length)out.push((g.length>2?g.slice(0,-1).join(', ')+', and '+g[g.length-1]:g.join(' and '))+' left out');
   return 'Adjusted score: '+out.join('; ')+'.';
  }
  return {version:2,revision:'2026-10-11 rounding, liming question',MATCH_TOLERANCE,keepPublished,SITE,DYN,ORDER,GROUP1,DEFAULTS,LABELS,normalize,active,isNRCS,scoreValues,score,scoreRow,classIndex,describe};

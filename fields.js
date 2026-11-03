@@ -83,16 +83,16 @@
   fields.push(f);queue.push(f);batch.total++;renderList();if(!quiet)pump();return f;
  }
  // Clear every field at once (October 24, 2026). Queued lookups are skipped; one still running is ignored when it returns.
- function clearFields(){
+ function clearFields(e,force){
   if(!fields.length)return;
-  if(fields.length>1&&!window.confirm('Remove all '+fields.length+' fields from the map?'))return;
+  if(!force&&fields.length>1&&!window.confirm('Remove all '+fields.length+' fields from the map?'))return;
   for(const f of fields.slice())removeField(f);
   queue.length=0;progress('');if(!running)batch.total=batch.done=0;
-  (toolbar.hidden?$('select-fields'):$('draw-field')).focus();
+  if(!force)(toolbar.hidden?$('select-fields'):$('draw-field')).focus();
  }
  function removeField(f){
   f.removed=true;map.removeLayer(f.outline);if(f.soilLayer)map.removeLayer(f.soilLayer);
-  fields.splice(fields.indexOf(f),1);if(selected&&selected.field===f)selected=null;renderList();renderTotals();renderSoil();leaveFieldModeIfEmpty();
+  fields.splice(fields.indexOf(f),1);if(selected&&selected.field===f)selected=null;if(prompt.field===f)hidePrompt();renderList();renderTotals();renderSoil();leaveFieldModeIfEmpty();
  }
 
  // ---- lookups: queued, paced under the service's rate limit, each part sent on its own ----
@@ -118,9 +118,9 @@
    running++;f.status='looking';renderList();
    const n=++batch.done;f.progress='Looking up soils for field '+n+' of '+batch.total+'…';progress(f.progress);
    lookupField(f).then(()=>{f.status='done';},e=>{f.status='error';f.error=e.message;}).finally(()=>{
-    running--;if(!f.removed){draw_(f);renderList();renderTotals();}
+    running--;if(!f.removed){draw_(f);renderList();renderTotals();showPrompt(f);}
     if(!queue.length&&!running&&!fields.length){progress('');batch.total=batch.done=0;}
-    else if(!queue.length&&!running){const failed=fields.filter(x=>x.status==='error').length;const found=fields.filter(x=>x.status==='done').length;progress(failed?failed+' field'+(failed===1?'':'s')+' could not be looked up. See the message under each field.':'Soils found for '+found+' field'+(found===1?'':'s')+'. Hover over a soil for its rating.');batch.total=batch.done=0;}
+    else if(!queue.length&&!running){const failed=fields.filter(x=>x.status==='error').length;const found=fields.filter(x=>x.status==='done').length;progress(failed?failed+' field'+(failed===1?'':'s')+' could not be looked up. See the message under each field.':'Soils found for '+found+' field'+(found===1?'':'s')+'. Click a soil to see what biochar can help improve.');batch.total=batch.done=0;}
     pump();
    });
   }
@@ -228,6 +228,60 @@
  }
  function counts(units,a){const n=Array(7).fill(0),y=Array(7).fill(0);for(const u of units){const s=score(u,a),ac=acresOf(u.area);n[s.nrcsCls]+=ac;y[s.cls]+=ac;}return {n,y};}
 
+ // ---- field score and what biochar could improve (November 2026) ----
+ // Field score: the average of each soil's score weighted by its acres in the field, over soils that have
+ // a score. What biochar could improve: the share of the field's mapped acres where the soil data show
+ // room for biochar to help each property (the same tests as the soil cards).
+ function fieldScore(units,a){
+  let n=0,na=0,y=0,ya=0,mapped=0;
+  for(const u of units){const s=score(u,a),ac=acresOf(u.area);mapped+=ac;if(s.nrcs!==null){n+=s.nrcs*ac;na+=ac;}if(s.value!==null&&s.cls!==6){y+=s.value*ac;ya+=ac;}}
+  return {nrcs:na?n/na:null,nrcsAcres:na,yours:ya?y/ya:null,yoursAcres:ya,mapped};
+ }
+ function improvements(units,a){
+  const acres=new Map();let mapped=0;
+  for(const u of units){
+   const ac=acresOf(u.area);mapped+=ac;if(!u.model)continue;
+   for(const r of Insights.publicRows(E,withTest(u,a),{active:P.active(a)}).opportunities){const e=acres.get(r.key)||{label:r.label,acres:0};e.acres+=ac;acres.set(r.key,e);}
+  }
+  return {mapped,rows:[...acres.values()].map(e=>({...e,share:mapped?e.acres/mapped:0})).sort((x,y)=>y.share-x.share)};
+ }
+ function scoreRow(label,value){
+  const row=document.createElement('div'),cls=value===null?null:P.classIndex(value);row.className='fs-row';
+  row.innerHTML='<span class="fs-label">'+esc(label)+'</span>'+(cls===null?'<span class="fs-value">Not available</span>':'<span class="acreage-swatch" style="background:'+colors[cls]+'"></span><span class="fs-value">'+value.toFixed(3)+' · '+esc(NAMES[cls])+'</span>');
+  return row;
+ }
+ function summary(units,a,adjusted){
+  const box=document.createElement('div'),fs=fieldScore(units,a),imp=improvements(units,a);
+  const sc=document.createElement('div');sc.className='field-score';
+  sc.append(scoreRow(adjusted?'NRCS rating, field average':'Field score (NRCS rating)',fs.nrcs));
+  if(adjusted)sc.append(scoreRow('Your choices, field average',fs.yours));
+  const part=(ac,what)=>ac<fs.mapped-.05?' '+fmt(ac)+' of '+fmt(fs.mapped)+' mapped acres '+what+'.':'';
+  const note=document.createElement('p');note.className='hint';
+  note.textContent='Average of the soils\' scores, weighted by their acres.'+(adjusted&&Math.abs(fs.yoursAcres-fs.nrcsAcres)<.05?part(fs.nrcsAcres,'have a score'):part(fs.nrcsAcres,'have an NRCS rating')+(adjusted?part(fs.yoursAcres,'have an adjusted score'):''));
+  sc.append(note);box.append(sc);
+  const im=document.createElement('div');im.className='improve';
+  const h=document.createElement('h5');h.textContent='What biochar could help improve';im.append(h);
+  if(imp.rows.length){
+   const ul=document.createElement('ul');
+   for(const r of imp.rows){const li=document.createElement('li'),pct=Math.round(r.share*100);li.innerHTML='<span>'+esc(r.label)+'</span><span class="bar" aria-hidden="true"><i style="width:'+pct+'%"></i></span><span class="pct">'+pct+'%</span>';li.title=fmt(r.acres)+' of '+fmt(imp.mapped)+' mapped acres';ul.append(li);}
+   im.append(ul);
+   const p=document.createElement('p');p.className='hint';p.textContent='Share of the mapped acres where the soil data show room for biochar to help. It does not show how much each property would change.';im.append(p);
+  }else{const p=document.createElement('p');p.className='hint';p.textContent='The available soil data do not identify a clear improvement in this area.';im.append(p);}
+  box.append(im);return box;
+ }
+
+ // ---- "Click a soil" prompt: a bouncing arrow on the largest soil of the latest field, until a soil is chosen ----
+ const prompt={marker:null,field:null,done:false};
+ function hidePrompt(){if(prompt.marker)map.removeLayer(prompt.marker);prompt.marker=null;prompt.field=null;$('soil-prompt-panel').hidden=true;}
+ function showPrompt(f){
+  if(prompt.done||f.status!=='done'||!f.units.length)return;
+  if(prompt.marker)map.removeLayer(prompt.marker);
+  let at;try{at=turf.pointOnFeature({type:'MultiPolygon',coordinates:f.units[0].parts}).geometry.coordinates;}catch{return;}
+  prompt.field=f;prompt.marker=L.marker([at[1],at[0]],{interactive:false,keyboard:false,icon:L.divIcon({className:'soil-prompt',iconSize:[0,0],iconAnchor:[0,0],
+   html:'<div class="bubble"><div class="text">Click a soil to see what biochar can help improve</div><div class="arrow"></div></div>'})}).addTo(map);
+  $('soil-prompt-panel').hidden=false;
+ }
+
  // ---- drawing soils ----
  function esc(t){const d=document.createElement('span');d.textContent=String(t??'');return d.innerHTML;}
  function tooltip(u){
@@ -283,8 +337,9 @@
     lab.append(inp);const note=document.createElement('p');note.className='hint';note.id='ph-note-'+f.id;
     note.textContent=!Number.isFinite(f.phTest)?'Replaces the mapped pH for every soil in this field.':usesTest(f,a)?'Your soil test pH replaces the mapped pH for every soil in this field.':'Soil pH is left out under your liming answer, so this soil test pH is not used.';
     box.append(lab,note);li.append(box);
+    li.append(summary(f.units,a,adjustedFor([f],a)));
     const mapped=f.units.reduce((s,u)=>s+acresOf(u.area),0),{n,y}=counts(f.units,a);
-    const det=document.createElement('details');det.open=fields.length<=3;const sum=document.createElement('summary');sum.textContent='Soils and acres ('+f.units.length+' soil'+(f.units.length===1?'':'s')+', '+fmt(mapped)+' mapped acres)';det.append(sum,table(n,y,adjustedFor([f],a)));
+    const det=document.createElement('details');det.open=fields.length<=1;const sum=document.createElement('summary');sum.textContent='Soils and acres ('+f.units.length+' soil'+(f.units.length===1?'':'s')+', '+fmt(mapped)+' mapped acres)';det.append(sum,table(n,y,adjustedFor([f],a)));
     if(f.exploratoryError){const p=document.createElement('p');p.className='hint';p.textContent=f.exploratoryError;det.append(p);}
     const soils=document.createElement('ul');soils.className='soil-list';
     for(const u of f.units){const s=score(u,a),li2=document.createElement('li'),b=document.createElement('button');b.type='button';b.className='soil-button'+(selected===u?' selected':'');
@@ -300,10 +355,10 @@
   const done=fields.filter(f=>f.status==='done'),box=$('fields-total');box.hidden=!done.length;if(!done.length)return;
   const a=answers(),{n,y}=counts(done.flatMap(f=>f.units),a);
   $('fields-total-title').textContent=done.length===1?'Field total':'All '+done.length+' fields';
-  $('fields-total-table').replaceChildren(table(n,y,adjustedFor(done,a)));
+  $('fields-total-table').replaceChildren(...(done.length>1?[summary(done.flatMap(f=>f.units),a,adjustedFor(done,a))]:[]),table(n,y,adjustedFor(done,a)));
  }
  function selectSoil(u,zoom){
-  selected=u;renderList();renderSoil();
+  prompt.done=true;hidePrompt();selected=u;renderList();renderSoil();
   if(zoom){const b=L.geoJSON({type:'MultiPolygon',coordinates:u.parts}).getBounds();map.fitBounds(b,{padding:[40,40],maxZoom:17});}
   $('soil-detail').scrollIntoView({block:'nearest'});
  }
@@ -353,6 +408,8 @@
  });
 
  $('clear-fields').addEventListener('click',clearFields);$('clear-fields-panel').addEventListener('click',clearFields);
- window.abiFields={fields,addField,removeField,clearFields,get busy(){return running>0||queue.length>0;},score,available,pieces,queryRing};
+ // Reset (header button): close the field tool and remove every field without asking.
+ function resetFields(){stopDrawing();if(window.abiAddressSearch)window.abiAddressSearch.reset();clearFields(null,true);hidePrompt();prompt.done=false;toolbar.hidden=true;launcher.hidden=false;setFieldMode(false);$('field-notes').hidden=true;}
+ window.abiFields={fields,addField,removeField,clearFields,resetFields,fieldScore,improvements,get busy(){return running>0||queue.length>0;},score,available,pieces,queryRing};
  renderList();
 })();
