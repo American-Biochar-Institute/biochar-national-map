@@ -459,23 +459,33 @@
       icon: L.divIcon({ className: "state-label" + (p[2] ? " small" : ""), html: ab, iconSize: [22, 12] })
     }).addTo(statesLayer);
   });
+  map.createPane("statePane"); map.getPane("statePane").style.zIndex = 380; map.getPane("statePane").style.pointerEvents = "none";
+  var stateLines = null, stateHalo = null;
   fetch("states.geojson")
     .then(function(r){ return r.json(); })
     .then(function(gj){
       var skip = { Alaska:1, Hawaii:1, "Puerto Rico":1 };
       var feats = gj.features.filter(function(f){ return !skip[f.properties.name]; });
-      L.geoJSON({ type:"FeatureCollection", features:feats }, {
-        interactive: false, style: { color:"#3d3d3d", weight:0.9, opacity:0.6, fill:false }
-      }).addTo(statesLayer);
+      // State lines sit above county lines and the soil colors, with a white edge, and get heavier as
+      // you zoom in so they stay distinct from county lines (November 2026).
+      var g = { type:"FeatureCollection", features:feats }, renderer = L.svg({ pane:"statePane" });
+      stateHalo = L.geoJSON(g, { pane:"statePane", renderer:renderer, interactive:false, style: Object.assign({ fill:false }, stateStyle(map.getZoom()).halo) }).addTo(statesLayer);
+      stateLines = L.geoJSON(g, { pane:"statePane", renderer:renderer, interactive:false, style: Object.assign({ fill:false }, stateStyle(map.getZoom()).line) }).addTo(statesLayer);
     })
     .catch(function(){});
+  function stateStyle(z){
+    if (z >= 7) return { line:{ color:"#292621", weight:2.6, opacity:0.95 }, halo:{ color:"#ffffff", weight:6, opacity:0.8 } };
+    if (z >= 5) return { line:{ color:"#292621", weight:1.9, opacity:0.9 }, halo:{ color:"#ffffff", weight:4.5, opacity:0.7 } };
+    return { line:{ color:"#292621", weight:1.4, opacity:0.85 }, halo:{ color:"#ffffff", weight:3.5, opacity:0.6 } };
+  }
+  function restyleStates(){ if (!stateLines) return; var st = stateStyle(map.getZoom()); stateHalo.setStyle(st.halo); stateLines.setStyle(st.line); }
 
   // zoom-driven behavior: reveal small-state labels and county lines when zoomed in
   function onZoom(){
     var el = map.getContainer();
     if (map.getZoom() >= 6) el.classList.add("zoomed-in"); else el.classList.remove("zoomed-in");
     if (map.getZoom() >= COUNTY_LABEL_ZOOM) el.classList.add("county-zoom"); else el.classList.remove("county-zoom");
-    updateCounties();
+    updateCounties(); restyleStates();
     document.getElementById("resnote").style.display = (map.getZoom() >= 12) ? "block" : "none";
   }
   function onMove(){ updateCountyLabels(); }
